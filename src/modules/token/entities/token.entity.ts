@@ -32,7 +32,4 @@ export class TokenEntity {
 
   @Column({ type: 'enum', enum: TokenHandle, default: TokenHandle.CRAWL_CMT })
   type: TokenHandle;
-
-  @Column({ name: 'retry_count', type: 'int', default: 0, nullable: true })
-  retryCount?: number;
 }

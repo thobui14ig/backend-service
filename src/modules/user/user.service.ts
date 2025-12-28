@@ -95,40 +95,19 @@ export class UserService {
   }
 
   async getInfo(userId: number) {
-    const vnNowStart = dayjs().tz(this.vnTimezone)
-    const vnNowEnd = dayjs().tz(this.vnTimezone)
-    const startDate = vnNowStart.startOf('day').utc().format('YYYY-MM-DD HH:mm:ss');
-    const endDate = vnNowEnd.endOf('day').utc().format('YYYY-MM-DD HH:mm:ss');
+    const res = await this.repo.findOne({
+      where: {
+        id: userId,
+        isDelete: false
+      },
+      select: {
+        id: true, 
+        username: true,
+        level: true
+      }
+    })
 
-    const res = await this.connection.query(`
-      SELECT
-        u.id,
-        u.username,
-        u.created_at as createdAt,
-        u.expired_at as expiredAt,
-        u.link_on_limit as linkOnLimit,
-        u.link_off_limit as linkOffLimit,
-        u.link_on_hide_limit as linkOnHideLimit,
-        u.link_off_hide_limit as linkOffHideLimit,
-        u.level,
-        u.get_phone as getPhone,
-        (SELECT COUNT(*) FROM links l WHERE l.user_id = u.id AND l.status = 'started' and l.hide_cmt = false AND l.is_deleted = false) AS totalLinkOn,
-        (SELECT COUNT(*) FROM links l WHERE l.user_id = u.id AND l.status = 'pending' and l.hide_cmt = false AND l.is_deleted = false) AS totalLinkOff,
-		    (SELECT COUNT(*) FROM links l WHERE l.user_id = u.id AND l.status = 'started' and l.hide_cmt = true AND l.is_deleted = false) AS totalLinkOnHide,
-        (SELECT COUNT(*) FROM links l WHERE l.user_id = u.id AND l.status = 'pending' and l.hide_cmt = true AND l.is_deleted = false) AS totalLinkOffHide,
-        (
-          SELECT COUNT(*) FROM comments c
-          left join links l on l.id = c.link_id AND l.is_deleted = false
-          left join users u on u.id = l.user_id
-          where u.id = ${userId} and (c.time_created between '${startDate}' and '${endDate}' )
-        ) AS totalComments
-        FROM users u
-        WHERE u.id = ${userId} and u.is_deleted = false;
-    `)
-    const user = res[0]
-    user.createdAt = dayjs(user.createdAt).format('YYYY-MM-DD');
-    user.expiredAt = dayjs(user.expiredAt).format('YYYY-MM-DD');
-
-    return user
+    delete res.password
+    return res;
   }
 }

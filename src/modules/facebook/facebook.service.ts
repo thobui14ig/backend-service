@@ -1,5 +1,5 @@
 import { HttpService } from '@nestjs/axios';
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AxiosRequestConfig } from 'axios';
@@ -227,12 +227,20 @@ export class FacebookService {
   }
 
   async getInfoLink(url: string) {
-    const syncInfoService = this.configService.get<string>('CRONJOB_SERVICE')
-    const res = await firstValueFrom(this.httpService.post(`http://${syncInfoService}/facebook/get-info`, {
-        url
-      }),
-    );  
-    return res.data 
+    try {
+      const syncInfoService = this.configService.get<string>('CRONJOB_SERVICE')
+      const res = await firstValueFrom(this.httpService.post(`http://${syncInfoService}/facebook/get-info`, {
+          url
+        }),
+      );  
+      return res.data       
+    } catch (error) {
+      throw new HttpException(
+        error.response.data.message,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
   }
 
   async getComment(url: string) {
@@ -248,8 +256,10 @@ export class FacebookService {
       );  
       return res.data       
     } catch (error) {
-      console.log(error)
-      return null    
+      throw new HttpException(
+        error.response.data.message,
+        HttpStatus.BAD_REQUEST,
+      ); 
     }
   }
 }
