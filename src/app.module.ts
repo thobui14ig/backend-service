@@ -29,6 +29,8 @@ import { VpsEntity } from './modules/vps/entities/vps.entity';
 import { GatewayModules } from './infra/socket/gateway.modules';
 import { AutoModule } from './modules/auto/auto.module';
 import { AutoEntity } from './modules/auto/auto.entity';
+import { OrderModule } from './modules/order/order.module';
+import { OrderEntity } from './modules/order/entities/order.entity';
 
 @Module({
   imports: [
@@ -57,7 +59,8 @@ import { AutoEntity } from './modules/auto/auto.entity';
           CookieEntity,
           TokenEntity,
           VpsEntity,
-          AutoEntity
+          AutoEntity,
+          OrderEntity
         ],
         // logging: true,
         // synchronize: true, // chỉ dùng trong dev!
@@ -78,7 +81,8 @@ import { AutoEntity } from './modules/auto/auto.entity';
     EventEmitterModule.forRoot(),
     VpsModule,
     GatewayModules,
-    AutoModule
+    AutoModule,
+    OrderModule
   ],
   controllers: [AppController],
   providers: [
