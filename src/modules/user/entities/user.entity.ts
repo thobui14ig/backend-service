@@ -24,13 +24,7 @@ export class UserEntity {
 
   @Column()
   password: string;
-
-  @Column({ name: 'expired_at' })
-  expiredAt: Date;
-
-  @Column({ name: 'link_limit', default: 0 })
-  linkLimit?: number;
-
+  
   @Column({ default: LEVEL.USER })
   level?: LEVEL;
 

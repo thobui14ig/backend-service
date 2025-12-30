@@ -12,30 +12,4 @@ export class CreateUserDto {
   @IsNotEmpty()
   @IsString()
   password: string;
-
-  expiredAt: Date
-
-  @IsNumber()
-  @IsOptional()
-  linkAddLimit?: number
-
-  @IsNumber()
-  @IsOptional()
-  linkStartLimit?: number
-
-  @IsNumber()
-  @IsOptional()
-  delayOnPrivate?: number
-
-  @IsNumber()
-  @IsOptional()
-  delayOnPublic?: number
-
-  @IsBoolean()
-  @IsOptional()
-  getPhone?: boolean
-
-  @Optional()
-  @IsString()
-  accountFbUuid: string;
 }
