@@ -53,7 +53,7 @@ export class CommentsService {
           COUNT(*) OVER() AS totalCount
       FROM comments c
       JOIN links l 
-          ON l.id = c.link_id and l.is_deleted = false
+          ON l.id = c.link_id and l.is_deleted = false and l.is_link_group = false
       WHERE 
         ${condition}
          c.created_at BETWEEN '${startDate}' AND '${endDate}'
