@@ -31,6 +31,10 @@ import { AutoModule } from './modules/auto/auto.module';
 import { AutoEntity } from './modules/auto/auto.entity';
 import { OrderModule } from './modules/order/order.module';
 import { OrderEntity } from './modules/order/entities/order.entity';
+import { GroupFacebookModule } from './modules/group-facebook/group-facebook.module';
+import { GroupFacebookEntity } from './modules/group-facebook/entities/group-facebook.entity';
+import { PhoneCustomerModule } from './modules/phone-customer/phone-customer.module';
+import { PhoneCustomerEntity } from './modules/phone-customer/entities/phone-customer.entity';
 
 @Module({
   imports: [
@@ -60,7 +64,9 @@ import { OrderEntity } from './modules/order/entities/order.entity';
           TokenEntity,
           VpsEntity,
           AutoEntity,
-          OrderEntity
+          OrderEntity,
+          GroupFacebookEntity,
+          PhoneCustomerEntity
         ],
         // logging: true,
         // synchronize: true, // chỉ dùng trong dev!
@@ -82,7 +88,9 @@ import { OrderEntity } from './modules/order/entities/order.entity';
     VpsModule,
     GatewayModules,
     AutoModule,
-    OrderModule
+    OrderModule,
+    GroupFacebookModule,
+    PhoneCustomerModule
   ],
   controllers: [AppController],
   providers: [
