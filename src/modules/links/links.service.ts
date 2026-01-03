@@ -116,7 +116,8 @@ export class LinkService {
               l.created_at::TEXT AS "createdAt",
               l.last_comment_time::TEXT AS "lastCommentTime",
               u.username,
-              l.type
+              l.type,
+              l.group_id as "groupId"
           FROM links l
           JOIN users u ON u.id = l.user_id
           WHERE l.is_deleted = false and l.is_link_group = false ${queryEntends}
@@ -148,6 +149,7 @@ export class LinkService {
     const argUpdate: Partial<LinkEntity> = {
       id: params.id,
       linkName: params.linkName,
+      groupId: params.groupId
     };
 
     // Admin mới được sửa các field nhạy cảm

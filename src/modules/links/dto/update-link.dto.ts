@@ -15,6 +15,9 @@ export class UpdateLinkDTO {
     type?: LinkType;
 
     @IsNumber()
+    groupId: number
+
+    @IsNumber()
     @IsOptional()
     delayTime?: number;
 }
