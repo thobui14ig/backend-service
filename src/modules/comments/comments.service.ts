@@ -5,7 +5,7 @@ import * as dayjs from 'dayjs';
 import * as timezone from 'dayjs/plugin/timezone';
 import * as utc from 'dayjs/plugin/utc';
 import { DataSource, Repository } from 'typeorm';
-import { UserEntity } from '../user/entities/user.entity';
+import { LEVEL, UserEntity } from '../user/entities/user.entity';
 import { IGetCommentParams } from './comments.service.i';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { CommentEntity } from './entities/comment.entity';
@@ -19,7 +19,6 @@ export class CommentsService {
   constructor(
     @InjectRepository(CommentEntity)
     private repo: Repository<CommentEntity>,
-    private readonly httpService: HttpService,
     private readonly connection: DataSource,
   ) { }
   async findAll(user: UserEntity, params: IGetCommentParams) {
@@ -33,8 +32,8 @@ export class CommentsService {
     const limit = params.limit
     const offset = params.offset
 
-    // const condition = user.level as LEVEL === LEVEL.ADMIN ? `` : `c.user_id = ${user.id} AND `
-    const condition = ''
+    const condition = user.level as LEVEL === LEVEL.ADMIN ? `` : `c.user_id = ${user.id} AND `
+   
     const query = `
       SELECT 
           c.id,
@@ -81,13 +80,5 @@ export class CommentsService {
         id
       }
     })
-  }
-
-  update(id: number, updateCommentDto: UpdateCommentDto) {
-    return `This action updates a #${id} comment`;
-  }
-
-  remove(id: number) {
-    // return this.repo.delete(id)
   }
 }

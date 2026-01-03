@@ -2,8 +2,10 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { TokenService } from './token.service';
 import { CreateTokenDto } from './dto/create-token.dto';
 import { UpdateTokenDto } from './dto/update-token.dto';
+import { Role, Roles } from 'src/common/decorators/roles.decorator';
 
 @Controller('tokens')
+@Roles(Role.ADMIN)
 export class TokenController {
   constructor(private readonly tokenService: TokenService) { }
 

@@ -5,8 +5,10 @@ import { Request } from 'express';
 import { getUser } from 'src/common/utils/user';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { CheckLimitLinkUserInterceptor } from './interceptor/handle-check-limit-link-user.interceptor';
+import { Role, Roles } from 'src/common/decorators/roles.decorator';
 
 @Controller('users')
+@Roles(Role.ADMIN)
 export class UserController {
   constructor(private readonly userService: UserService) { }
 

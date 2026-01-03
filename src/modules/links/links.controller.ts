@@ -14,20 +14,15 @@ import { Request } from 'express';
 import { getUser } from 'src/common/utils/user';
 import { CreateLinkDTO } from './dto/create-link.dto';
 import { UpdateLinkDTO } from './dto/update-link.dto';
-import { HideBy, LinkStatus, LinkType } from './entities/links.entity';
-import { LinkService } from './links.service';
-import { BodyLinkQuery, IGetLinkDeleted, ISettingLinkDto } from './links.service.i';
+import { HideBy, LinkStatus } from './entities/links.entity';
 import { CheckLimitLinkUserWhenAddLinkInterceptor } from './interceptors/handle-check-limit-link-user-when-add-link.interceptor';
 import { CheckLimitLinkUserWhenUpdateMultipleLinkInterceptor } from './interceptors/handle-check-limit-link-user-when-update-multiple-link.interceptor';
+import { LinkService } from './links.service';
+import { BodyLinkQuery, IGetLinkDeleted, ISettingLinkDto } from './links.service.i';
 
 @Controller('links')
 export class LinkController {
   constructor(private readonly linkService: LinkService) { }
-
-  @Post('/get-link-deleted')
-  getLinkDelete(@Body() body: IGetLinkDeleted) {
-    return this.linkService.getLinksDeleted(body);
-  }
 
   @Post()
   @UseInterceptors(CheckLimitLinkUserWhenAddLinkInterceptor)
@@ -55,34 +50,12 @@ export class LinkController {
   @Put()
   updateLink(@Req() req: Request, @Body() updateLinkDto: UpdateLinkDTO) {
     const user = getUser(req);
-    return this.linkService.update(updateLinkDto, user.level);
+    return this.linkService.update(updateLinkDto, user.level, user.id);
   }
 
   @Delete('/:id')
-  deleteLink(@Param('id') id: number) {
-    return this.linkService.delete(id);
-  }
-
-  @Post('/hide-cmt/:linkId')
-  hideCmt(@Req() req: Request, @Param('linkId') linkId: number, @Query('type') type: HideBy) {
+  deleteLink(@Param('id') id: number, @Req() req: Request,) {
     const user = getUser(req);
-
-    return this.linkService.hideCmt(linkId, type, user.id)
-  }
-
-  @Post('/setting-link')
-  @UseInterceptors(CheckLimitLinkUserWhenUpdateMultipleLinkInterceptor)
-  settingLink(@Body() body: ISettingLinkDto) {
-    return this.linkService.settingLink(body)
-  }
-
-  @Post('/priority')
-  priority(@Body() body: { priority: boolean, linkId: number }) {
-    return this.linkService.priority(body)
-  }
-
-  @Post('/update-link-delete')
-  updateLinkDelete(@Body() body: { status: LinkStatus, linkIds: number[] }) {
-    return this.linkService.updateLinkDelete(body)
+    return this.linkService.delete(id, user.level, user.id);
   }
 }

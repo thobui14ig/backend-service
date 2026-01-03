@@ -3,8 +3,10 @@ import { Request } from 'express';
 import { getUser } from 'src/common/utils/user';
 import { VpsService } from './vps.service';
 import { CreateVpsDto } from './dto/create-page.dto';
+import { Role, Roles } from 'src/common/decorators/roles.decorator';
 
 @Controller('vps')
+@Roles(Role.ADMIN)
 export class VpsController {
     constructor(private readonly vpsService: VpsService) { }
 

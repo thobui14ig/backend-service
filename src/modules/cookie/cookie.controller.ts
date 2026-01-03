@@ -4,8 +4,10 @@ import { CreateCookieDto } from './dto/create-cookie.dto';
 import { UpdateCookieDto } from './dto/update-cookie.dto';
 import { getUser } from 'src/common/utils/user';
 import { Request } from 'express';
+import { Role, Roles } from 'src/common/decorators/roles.decorator';
 
 @Controller('cookies')
+@Roles(Role.ADMIN)
 export class CookieController {
   constructor(private readonly cookieService: CookieService) { }
 

@@ -3,7 +3,9 @@ import { CreateGroupFacebookDto } from './dto/create-group-facebook.dto';
 import { UpdateGroupFacebookDto } from './dto/update-group-facebook.dto';
 import { IGetProxy } from './group-facebook.controller.i';
 import { GroupFacebooService } from './group-facebook.service';
+import { Role, Roles } from 'src/common/decorators/roles.decorator';
 
+@Roles(Role.ADMIN)
 @Controller('group-facebook')
 export class GroupFacebookController {
   constructor(private readonly groupFacebooService: GroupFacebooService) { }

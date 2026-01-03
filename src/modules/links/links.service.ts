@@ -1,13 +1,13 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { ForbiddenException, HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as dayjs from 'dayjs';
 import * as timezone from 'dayjs/plugin/timezone';
 import * as utc from 'dayjs/plugin/utc';
-import { DataSource, In, MoreThanOrEqual, Not, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { LEVEL } from '../user/entities/user.entity';
 import { UpdateLinkDTO } from './dto/update-link.dto';
-import { HideBy, LinkEntity, LinkStatus, LinkType } from './entities/links.entity';
-import { BodyLinkQuery, CreateLinkParams, IGetLinkDeleted, ISettingLinkDto } from './links.service.i';
+import { LinkEntity, LinkStatus } from './entities/links.entity';
+import { BodyLinkQuery, CreateLinkParams } from './links.service.i';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -151,78 +151,64 @@ export class LinkService {
     }
   }
 
-  update(params: UpdateLinkDTO, level: LEVEL) {
-    const argUpdate: Partial<LinkEntity> = {};
-    argUpdate.id = params.id;
-    argUpdate.linkName = params.linkName;
 
+  update(params: UpdateLinkDTO, level: LEVEL, userId: number) {
+    const argUpdate: Partial<LinkEntity> = {
+      id: params.id,
+      linkName: params.linkName,
+    };
+
+    // Admin mới được sửa các field nhạy cảm
     if (level === LEVEL.ADMIN) {
       argUpdate.delayTime = params.delayTime;
       argUpdate.type = params.type;
     }
 
     return this.connection.transaction(async (manager) => {
-      const record = await manager
-        .getRepository(LinkEntity)
-        .createQueryBuilder("e")
-        .setLock("pessimistic_write")
-        .where("e.id = :id", { id: argUpdate.id })
+      const repo = manager.getRepository(LinkEntity);
+
+      const record = await repo
+        .createQueryBuilder('e')
+        .setLock('pessimistic_write')
+        .where('e.id = :id', { id: params.id })
         .getOneOrFail();
 
-      Object.assign(record, argUpdate);
+      // 🔐 CHECK QUYỀN
+      const isAdmin = level === LEVEL.ADMIN;
+      const isOwner = record.userId === userId;
 
-      await manager.save(record);
+      if (!isAdmin && !isOwner) {
+        throw new ForbiddenException(
+          'Bạn không có quyền cập nhật link này',
+        );
+      }
+
+      Object.assign(record, argUpdate);
+      return repo.save(record);
     });
   }
 
-  delete(id: number) {
-    //chưa xử lý stop_monitoring
-    return this.repo.update(id, { isDelete: true });
-  }
 
-  async hideCmt(linkId: number, type: HideBy, userId: number) {
-    const link = await this.repo.findOne({
-      where: {
-        id: linkId
-      }
-    })
-    if (link) {
-      return this.repo.save(link)
-    }
+  async delete(id: number, level: LEVEL, userId: number) {
+    return this.connection.transaction(async (manager) => {
+      const repo = manager.getRepository(LinkEntity);
 
-    return null
-  }
+      const record = await repo
+        .createQueryBuilder('e')
+        .setLock('pessimistic_write')
+        .where('e.id = :id', { id })
+        .getOneOrFail();
 
-  async settingLink(setting: ISettingLinkDto) {
-    if (setting.isDelete) {
-      // return this.repo.delete(setting.linkIds)
-      await this.repo.update(setting.linkIds, { isDelete: true })
-    }
+      const isAdmin = level === LEVEL.ADMIN;
+      const isOwner = record.userId === userId;
 
-    const links = await this.repo.find({
-      where: {
-        id: In(setting.linkIds)
-      }
-    })
-
-    const newLinks = links.map((item) => {
-      if (setting.onOff && setting.type === LinkStatus.Pending) {
-        item.status = LinkStatus.Started
-        item.createdAt = dayjs.utc().format('YYYY-MM-DD HH:mm:ss') as any
-      }
-      if (!setting.onOff && setting.type === LinkStatus.Started) {
-        item.status = LinkStatus.Pending
-        item.createdAt = dayjs.utc().format('YYYY-MM-DD HH:mm:ss') as any
+      if (!isAdmin && !isOwner) {
+        throw new ForbiddenException('Bạn không có quyền xoá link này');
       }
 
-      if (setting.delay) {
-        item.delayTime = setting.delay
-      }
-
-      return item
-    })
-
-    return this.repo.save(newLinks)
+      record.isDelete = true;
+      return repo.save(record);
+    });
   }
 
   async getTotalLinkUserByStatus(userId: number, status: LinkStatus, hideCmt: boolean) {
@@ -260,110 +246,5 @@ export class LinkService {
           WHERE u.id = ${userId};
       `)
     return response[0]
-  }
-
-  getPostStarted(): Promise<LinkEntity[]> {
-    return this.repo.find({
-      where: {
-        status: In([LinkStatus.Started, LinkStatus.Pending]),
-        type: Not(LinkType.DIE),
-        delayTime: MoreThanOrEqual(0),
-        isDelete: false
-      },
-      relations: {
-        user: true
-      }
-    })
-  }
-
-  priority(body: { priority: boolean, linkId: number }) {
-    return this.repo.save({ id: body.linkId, priority: body.priority })
-  }
-
-  async getLinksDeleted(body: IGetLinkDeleted) {
-    const { limit, offset, userId } = body
-    let queryEntends = ``
-    const keyword = body.keyword?.length > 0 ? body.keyword?.trim() : null
-
-    if (userId) {
-      queryEntends += ` AND l.user_id = ${userId}`
-    }
-    const query = `
-      WITH filtered_links AS (
-          SELECT
-              l.id,
-              l.error_message AS errorMessage,
-              l.link_name AS linkName,
-              l.link_url AS linkUrl,
-              l.like,
-              l.post_id AS postId,
-              l.delay_time AS delayTime,
-              l.status,
-              DATE_FORMAT(CONVERT_TZ(l.created_at, '+00:00', '+07:00'), '%Y-%m-%d %H:%i:%s') AS createdAt,
-              CASE
-                  WHEN l.last_comment_time IS NOT NULL
-                      THEN TIMESTAMPDIFF(HOUR, l.last_comment_time, UTC_TIMESTAMP())
-                  ELSE 9999
-              END AS lastCommentTime,
-              u.username,
-              l.count_before AS countBefore,
-              l.count_after AS countAfter,
-              l.like_before AS likeBefore,
-              l.like_after AS likeAfter,
-              l.hide_cmt AS hideCmt,
-              l.hide_by AS hideBy,
-              l.type,
-              CASE
-                  WHEN l.time_craw_update IS NOT NULL
-                      THEN TIMESTAMPDIFF(HOUR, l.time_craw_update, l.last_comment_time)
-                  ELSE 9999
-              END AS timeCrawUpdate,
-              l.comment_count AS totalComment,
-              l.priority,
-              IFNULL(c1.totalCommentNewest, 0) AS totalCommentNewest,
-              IFNULL(c2.totalCommentToday, 0) AS totalCommentToday,
-              (l.count_after - (IFNULL(c1.totalCommentNewest, 0) - l.comment_count)) AS diffTimeCondition
-          FROM links l
-          JOIN users u ON u.id = l.user_id
-          LEFT JOIN (
-              SELECT link_id, COUNT(*) AS totalCommentNewest
-              FROM comments
-              GROUP BY link_id
-          ) c1 ON c1.link_id = l.id
-          LEFT JOIN (
-              SELECT link_id, COUNT(*) AS totalCommentToday
-              FROM comments
-              WHERE time_created BETWEEN
-                  UTC_TIMESTAMP() - INTERVAL (HOUR(UTC_TIMESTAMP())+MINUTE(UTC_TIMESTAMP())/60+SECOND(UTC_TIMESTAMP())/3600) HOUR
-                  AND UTC_TIMESTAMP()
-              GROUP BY link_id
-          ) c2 ON c2.link_id = l.id
-          WHERE l.is_deleted = true ${queryEntends}
-        ${keyword ? `AND (
-            l.post_id::text ~* '${keyword}'
-            OR l.link_name::text ~* '${keyword}'
-            OR l.link_url::text ~* '${keyword}'
-            OR l.status::text ~* '${keyword}'
-            OR u.username::text ~* '${keyword}'
-          )` : ""}
-      )
-      SELECT *, (SELECT COUNT(*) FROM filtered_links) AS totalCount
-      FROM filtered_links
-      ORDER BY createdAt DESC
-      LIMIT ${limit} OFFSET ${offset};
-
-      `
-    let response: any[] = await this.connection.query(query, [])
-
-    return {
-      data: response,
-      totalCount: response.length > 0 ? response[0].totalCount : 0
-    }
-  }
-
-  updateLinkDelete(body: { status: LinkStatus, linkIds: number[] }) {
-    const { linkIds, status } = body
-
-    return this.repo.update(linkIds, { status, isDelete: false })
   }
 }

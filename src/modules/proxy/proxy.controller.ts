@@ -3,8 +3,10 @@ import { ProxyService } from './proxy.service';
 import { CreateProxyDto } from './dto/create-proxy.dto';
 import { UpdateProxyDto } from './dto/update-proxy.dto';
 import { IGetProxy } from './proxy.controller.i';
+import { Role, Roles } from 'src/common/decorators/roles.decorator';
 
 @Controller('proxies')
+@Roles(Role.ADMIN)
 export class ProxyController {
   constructor(private readonly proxyService: ProxyService) { }
 

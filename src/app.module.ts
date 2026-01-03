@@ -9,7 +9,7 @@ import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { join } from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { AuthGuard } from './modules/auth/auth.guard';
+import { AuthGuard } from './common/guard/auth.guard';
 import { AuthModule } from './modules/auth/auth.module';
 import { CommentsModule } from './modules/comments/comments.module';
 import { CommentEntity } from './modules/comments/entities/comment.entity';
@@ -27,14 +27,13 @@ import { UserEntity } from './modules/user/entities/user.entity';
 import { VpsModule } from './modules/vps/vps.module';
 import { VpsEntity } from './modules/vps/entities/vps.entity';
 import { GatewayModules } from './infra/socket/gateway.modules';
-import { AutoModule } from './modules/auto/auto.module';
-import { AutoEntity } from './modules/auto/auto.entity';
 import { OrderModule } from './modules/order/order.module';
 import { OrderEntity } from './modules/order/entities/order.entity';
 import { GroupFacebookModule } from './modules/group-facebook/group-facebook.module';
 import { GroupFacebookEntity } from './modules/group-facebook/entities/group-facebook.entity';
 import { PhoneCustomerModule } from './modules/phone-customer/phone-customer.module';
 import { PhoneCustomerEntity } from './modules/phone-customer/entities/phone-customer.entity';
+import { RolesGuard } from './common/guard/roles.guard';
 
 @Module({
   imports: [
@@ -63,7 +62,6 @@ import { PhoneCustomerEntity } from './modules/phone-customer/entities/phone-cus
           CookieEntity,
           TokenEntity,
           VpsEntity,
-          AutoEntity,
           OrderEntity,
           GroupFacebookEntity,
           PhoneCustomerEntity
@@ -87,7 +85,6 @@ import { PhoneCustomerEntity } from './modules/phone-customer/entities/phone-cus
     EventEmitterModule.forRoot(),
     VpsModule,
     GatewayModules,
-    AutoModule,
     OrderModule,
     GroupFacebookModule,
     PhoneCustomerModule
@@ -99,6 +96,10 @@ import { PhoneCustomerEntity } from './modules/phone-customer/entities/phone-cus
     {
       provide: APP_GUARD,
       useClass: AuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
     },
   ],
 })

@@ -1,8 +1,10 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { PhoneCustomerService } from './phone-customer.service';
 import { IUpdateClick } from './phone-customer.controller.i';
+import { Role, Roles } from 'src/common/decorators/roles.decorator';
 
 @Controller('phone-customer')
+@Roles(Role.ADMIN)
 export class PhoneCustomerController {
   constructor(private readonly phoneCustomerService: PhoneCustomerService) { }
 
