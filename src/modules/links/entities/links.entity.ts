@@ -69,6 +69,9 @@ export class LinkEntity {
   @Column({ default: false, name: 'is_deleted' })
   isDelete: boolean;
 
+  @Column({ name: 'group_id' })
+  groupId: number;
+
   @CreateDateColumn({
     name: 'created_at',
   })

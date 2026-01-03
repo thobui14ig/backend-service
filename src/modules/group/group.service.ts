@@ -1,0 +1,67 @@
+import { ForbiddenException, Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { GroupEntity } from './entities/group.entity';
+import { CreateGroupDto } from './dto/create-group.dto';
+import { UpdateGroupDto } from './dto/update-group.dto';
+
+@Injectable()
+export class GroupService {
+  constructor(
+    @InjectRepository(GroupEntity)
+    private repo: Repository<GroupEntity>,
+  ) { }
+
+  async create(params: CreateGroupDto, userId: number) {
+    const arg = { ...params, userId }
+    return this.repo.save(arg)
+  }
+
+  findAll(userId: number) {
+    return this.repo.find({
+      where: {
+        userId
+      },
+      order: {
+        id: "DESC"
+      }
+    })
+  }
+
+  findOne(id: number) {
+    return this.repo.findOne({
+      where: {
+        id,
+      },
+    });
+  }
+
+  async update(id: number, params: UpdateGroupDto, userId: number) {
+    const group = await this.repo.findOne({
+      where: {
+        id,
+        userId
+      }
+    })
+    if (group) {
+      return this.repo.save({ id, ...params })
+    }
+
+    throw new ForbiddenException('Bạn không có quyền');
+  }
+
+  async remove(id: number, userId: number) {
+    const group = await this.repo.findOne({
+      where: {
+        id,
+        userId
+      }
+    })
+    
+    if (group) {
+      return this.repo.delete(id)
+    }
+
+    throw new ForbiddenException('Bạn không có quyền');
+  }
+}

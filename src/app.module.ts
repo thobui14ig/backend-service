@@ -34,6 +34,8 @@ import { GroupFacebookEntity } from './modules/group-facebook/entities/group-fac
 import { PhoneCustomerModule } from './modules/phone-customer/phone-customer.module';
 import { PhoneCustomerEntity } from './modules/phone-customer/entities/phone-customer.entity';
 import { RolesGuard } from './common/guard/roles.guard';
+import { GroupModule } from './modules/group/group.module';
+import { GroupEntity } from './modules/group/entities/group.entity';
 
 @Module({
   imports: [
@@ -64,7 +66,8 @@ import { RolesGuard } from './common/guard/roles.guard';
           VpsEntity,
           OrderEntity,
           GroupFacebookEntity,
-          PhoneCustomerEntity
+          PhoneCustomerEntity,
+          GroupEntity
         ],
         // logging: true,
         // synchronize: true, // chỉ dùng trong dev!
@@ -87,7 +90,8 @@ import { RolesGuard } from './common/guard/roles.guard';
     GatewayModules,
     OrderModule,
     GroupFacebookModule,
-    PhoneCustomerModule
+    PhoneCustomerModule,
+    GroupModule
   ],
   controllers: [AppController],
   providers: [

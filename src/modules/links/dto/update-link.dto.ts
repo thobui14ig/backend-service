@@ -1,5 +1,5 @@
 
-import { IsBoolean, IsEnum, IsNumber, IsOptional, IsString } from "class-validator";
+import { IsEnum, IsNumber, IsOptional, IsString } from "class-validator";
 import { LinkType } from "../entities/links.entity";
 
 export class UpdateLinkDTO {
@@ -17,16 +17,4 @@ export class UpdateLinkDTO {
     @IsNumber()
     @IsOptional()
     delayTime?: number;
-
-    @IsBoolean()
-    @IsOptional()
-    hideCmt?: boolean;
-
-    @IsNumber()
-    @IsOptional()
-    thread?: number;
-
-    @IsOptional()
-    @IsNumber()
-    tablePageId: number
 }

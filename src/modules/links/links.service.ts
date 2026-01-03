@@ -27,19 +27,6 @@ export class LinkService {
     const linksInValid = [];
 
     for (const link of params.links) {
-      const isLinkDelete = await this.repo.findOne({
-        where: {
-          linkUrl: link.url,
-          userId: params.userId,
-          isDelete: true          
-        }
-      })
-      if(isLinkDelete) {
-        await this.repo.update(isLinkDelete.id, {
-          isDelete: false,
-        })
-        continue;
-      }
       const isExitLink = await this.repo.findOne({
         where: {
           linkUrl: link.url,
@@ -54,6 +41,7 @@ export class LinkService {
           delayTime: 10,
           status: params.status,
           linkName: link.name,
+          groupId: params.groupId
         }
         linkEntities.push(entity)
         continue
@@ -94,7 +82,7 @@ export class LinkService {
   }
 
   async getAll(body: BodyLinkQuery, level: LEVEL, userIdByUerLogin: number, isFilter: boolean, limit: number, offset: number) {
-    const { type, userId } = body
+    const { type, userId, groupId } = body
     let queryEntends = ``
     const keyword = body.keyword?.length > 0 ? body.keyword?.trim() : null
 
@@ -110,6 +98,10 @@ export class LinkService {
     }
     if (level === LEVEL.USER) {
       queryEntends += ` AND l.user_id = ${userIdByUerLogin}`
+    }
+
+    if (groupId) {
+      queryEntends += ` AND l.group_id = ${groupId}`
     }
 
     const query = `

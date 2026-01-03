@@ -10,6 +10,7 @@ export interface BodyLinkQuery {
     type: LinkType
     userId: number
     keyword: string
+    groupId: number | null
 }
 
 export interface ISettingLinkDto {
