@@ -28,5 +28,5 @@ jobs:
           file: Dockerfile
           push: true
           tags: |
-            thobui/backend-service:latest
-            thobui/backend-service:${{ github.sha }}
+            thobui1996/backend-service:latest
+            thobui1996/backend-service:${{ github.sha }}
