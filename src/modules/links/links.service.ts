@@ -127,7 +127,7 @@ export class LinkService {
               l.type
           FROM links l
           JOIN users u ON u.id = l.user_id
-          WHERE l.is_deleted = false ${queryEntends}
+          WHERE l.is_deleted = false and l.is_link_group = false ${queryEntends}
  
         ${keyword ? `AND (
             l.post_id::text ~* '${keyword}'
