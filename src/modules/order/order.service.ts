@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { OrderEntity } from "./entities/order.entity";
 import { Repository } from "typeorm";
+import { CreateOrderDto } from "./order.controller.i";
 
 @Injectable()
 export class OrderService {
@@ -10,10 +11,11 @@ export class OrderService {
     private repo: Repository<OrderEntity>,
   ) {}
 
-  create(userId: number) {
+  create(userId: number, orderDto: CreateOrderDto) {
     const arg = {
         userId,
-        content: userId
+        content: userId,
+        amount: orderDto.amount
     }
     return this.repo.save(arg)
   }

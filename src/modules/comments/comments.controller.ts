@@ -1,9 +1,8 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Req } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Req } from '@nestjs/common';
 import { Request } from 'express';
 import { getUser } from 'src/common/utils/user';
 import { CommentsService } from './comments.service';
 import { IGetCommentParams } from './comments.service.i';
-import { UpdateCommentDto } from './dto/update-comment.dto';
 
 @Controller('comments')
 export class CommentsController {

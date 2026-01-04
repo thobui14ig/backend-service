@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
 
 export type OrderStatus = 'pending' | 'confirmed' | 'rejected' | 'cancelled';
 
@@ -18,4 +18,27 @@ export class OrderEntity {
 
     @Column()
     amount?: number
+
+    @CreateDateColumn({
+        name: 'created_at',
+        transformer: {
+        to: (value) => value,
+        from: (value: Date) => {
+        if (!value) return null;
+
+        const pad = (n: number, z = 2) => String(n).padStart(z, '0');
+
+        return (
+            value.getFullYear() + '-' +
+            pad(value.getMonth() + 1) + '-' +
+            pad(value.getDate()) + ' ' +
+            pad(value.getHours()) + ':' +
+            pad(value.getMinutes()) + ':' +
+            pad(value.getSeconds()) + '.' +
+            pad(value.getMilliseconds(), 3)
+        );
+        }
+        }
+    })
+    createdAt: Date;
 }
