@@ -60,13 +60,13 @@ export class LinkService {
       }
     }
 
-    await this.repo.save(uniqueLinks);
-    if (linksInValid.length > 0) {
-      throw new HttpException(
-        `Thêm thành công ${linkEntities.length}, Link bị trùng: [${linksInValid.join(',')}]`,
-        HttpStatus.BAD_REQUEST,
-      );
+    const BATCH_SIZE = 10;
+
+    for (let i = 0; i < uniqueLinks.length; i += BATCH_SIZE) {
+      const batch = uniqueLinks.slice(i, i + BATCH_SIZE);
+      await this.repo.save(batch);
     }
+
     throw new HttpException(
       `Thêm thành công ${linkEntities.length} link`,
       HttpStatus.OK,

@@ -14,11 +14,9 @@ import { Request } from 'express';
 import { getUser } from 'src/common/utils/user';
 import { CreateLinkDTO } from './dto/create-link.dto';
 import { UpdateLinkDTO } from './dto/update-link.dto';
-import { HideBy, LinkStatus } from './entities/links.entity';
 import { CheckLimitLinkUserWhenAddLinkInterceptor } from './interceptors/handle-check-limit-link-user-when-add-link.interceptor';
-import { CheckLimitLinkUserWhenUpdateMultipleLinkInterceptor } from './interceptors/handle-check-limit-link-user-when-update-multiple-link.interceptor';
 import { LinkService } from './links.service';
-import { BodyLinkQuery, IGetLinkDeleted, ISettingLinkDto } from './links.service.i';
+import { BodyLinkQuery } from './links.service.i';
 
 @Controller('links')
 export class LinkController {
