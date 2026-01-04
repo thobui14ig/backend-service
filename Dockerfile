@@ -1,20 +1,28 @@
-# Base image
-FROM node:lts
+# =======================
+# BUILD STAGE
+# =======================
+FROM node:20-alpine AS builder
 
-# Create app directory
-WORKDIR /usr/src/app
+WORKDIR /app
 
-# A wildcard is used to ensure both package.json AND package-lock.json are copied
 COPY package*.json ./
-
-# Install app dependencies
 RUN npm install
 
-# Bundle app source
 COPY . .
-
-# Creates a "dist" folder with the production build
 RUN npm run build
 
-# Start the server using the production build
-CMD [ "node", "dist/main.js" ]
+# =======================
+# PRODUCTION STAGE
+# =======================
+FROM node:20-alpine
+
+WORKDIR /app
+ENV NODE_ENV=production
+
+# chỉ copy thứ cần để chạy
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
+
+EXPOSE 4000
+CMD ["node", "dist/main.js"]
