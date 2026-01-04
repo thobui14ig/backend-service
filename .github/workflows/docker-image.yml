@@ -30,3 +30,14 @@ jobs:
           tags: |
             thobui1996/backend-service:latest
             thobui1996/backend-service:${{ github.sha }}
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd /root/repo/docker-migration
+            docker compose pull backend-service
+            docker compose up -d backend-service
+            docker image prune -f
