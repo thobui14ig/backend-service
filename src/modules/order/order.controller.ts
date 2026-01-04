@@ -3,7 +3,7 @@ import { Request } from "express";
 import { getUser } from "src/common/utils/user";
 import { OrderService } from "./order.service";
 import { Role, Roles } from "src/common/decorators/roles.decorator";
-import { CreateOrderDto } from "./order.controller.i";
+import { ConfirmDto, CreateOrderDto } from "./order.controller.i";
 
 @Controller('orders')
 @Roles(Role.ADMIN)
@@ -20,5 +20,10 @@ export class OrderController {
   findAll(@Req() req: Request) {
     const user = getUser(req);
     return this.orderService.findAll(user.id);
+  }
+
+  @Post("/confirm")
+  confirm(@Body() body: ConfirmDto) {
+    return this.orderService.confirm(body.orderId);
   }
 }

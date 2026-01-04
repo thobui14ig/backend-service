@@ -30,4 +30,8 @@ export class OrderService {
         }
     })
   }
+
+  confirm(orderId: number) {
+    return this.repo.save({ id: orderId, status: "confirmed" })
+  }
 }
