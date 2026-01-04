@@ -118,10 +118,29 @@ export class LinkService {
               u.username,
               l.type,
               l.group_id as "groupId",
-              l.content
+              l.content,
+              COUNT(c.id) AS "totalComment",
+              COUNT(c.id) FILTER (
+                  WHERE c.created_at >= date_trunc('day', now())
+                    AND c.created_at <  date_trunc('day', now()) + INTERVAL '1 day'
+              ) AS "totalCommentToDay"
           FROM links l
           JOIN users u ON u.id = l.user_id
+          LEFT JOIN comments c ON c.link_id = l.id
           WHERE l.is_deleted = false and l.is_link_group = false ${queryEntends}
+          GROUP BY
+            l.id,
+            l.link_name,
+            l.link_url,
+            l.post_id,
+            l.delay_time,
+            l.status,
+            l.created_at,
+            l.last_comment_time,
+            u.username,
+            l.type,
+            l.group_id,
+            l.content
  
         ${keyword ? `AND (
             l.post_id::text ~* '${keyword}'
@@ -137,6 +156,7 @@ export class LinkService {
       LIMIT ${limit} OFFSET ${offset};
 
       `
+      console.log(query)
     let response: any[] = await this.connection.query(query, [])
 
     return {
