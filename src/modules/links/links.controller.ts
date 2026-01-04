@@ -23,7 +23,7 @@ export class LinkController {
   constructor(private readonly linkService: LinkService) { }
 
   @Post()
-  @UseInterceptors(CheckLimitLinkUserWhenAddLinkInterceptor)
+  // @UseInterceptors(CheckLimitLinkUserWhenAddLinkInterceptor)
   create(@Req() req: Request, @Body() createLinkDto: CreateLinkDTO) {
     const user = getUser(req);
 
