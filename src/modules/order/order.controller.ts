@@ -6,7 +6,6 @@ import { Role, Roles } from "src/common/decorators/roles.decorator";
 import { ConfirmDto, CreateOrderDto } from "./order.controller.i";
 
 @Controller('orders')
-@Roles(Role.ADMIN)
 export class OrderController {
   constructor(private readonly orderService: OrderService) { }
 
@@ -19,10 +18,11 @@ export class OrderController {
   @Get()
   findAll(@Req() req: Request) {
     const user = getUser(req);
-    return this.orderService.findAll(user.id);
+    return this.orderService.findAll(user.id, user.level);
   }
 
   @Post("/confirm")
+  @Roles(Role.ADMIN)
   confirm(@Body() body: ConfirmDto) {
     return this.orderService.confirm(body.orderId);
   }

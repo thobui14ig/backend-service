@@ -156,7 +156,6 @@ export class LinkService {
       LIMIT ${limit} OFFSET ${offset};
 
       `
-      console.log(query)
     let response: any[] = await this.connection.query(query, [])
 
     return {

@@ -8,7 +8,6 @@ import { CheckLimitLinkUserInterceptor } from './interceptor/handle-check-limit-
 import { Role, Roles } from 'src/common/decorators/roles.decorator';
 
 @Controller('users')
-@Roles(Role.ADMIN)
 export class UserController {
   constructor(private readonly userService: UserService) { }
 
@@ -18,6 +17,7 @@ export class UserController {
   }
 
   @Get('')
+  @Roles(Role.ADMIN)
   getUsers() {
     return this.userService.getAll()
   }
@@ -35,12 +35,14 @@ export class UserController {
   }
 
   @Put()
+  @Roles(Role.ADMIN)
   // @UseInterceptors(CheckLimitLinkUserInterceptor)
   updateUser(@Body() updateUserDto: UpdateUserDto) {
     return this.userService.update(updateUserDto)
   }
 
   @Delete('/:id')
+  @Roles(Role.ADMIN)
   deleteUser(@Param('id') id: number) {
     return this.userService.delete(id)
   }

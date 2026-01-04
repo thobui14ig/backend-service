@@ -28,6 +28,9 @@ export class UserEntity {
   @Column({ default: LEVEL.USER })
   level?: LEVEL;
 
+  @Column()
+  balance: number
+
   @Column({ default: false, name: 'is_deleted' })
   isDelete: Boolean;
 
