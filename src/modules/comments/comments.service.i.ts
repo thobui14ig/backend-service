@@ -6,4 +6,5 @@ export interface IGetCommentParams {
     limit: number
     offset: number
     keyword?: string
+    groupId?: number | null
 }

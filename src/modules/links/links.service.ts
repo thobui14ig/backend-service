@@ -117,7 +117,8 @@ export class LinkService {
               l.last_comment_time::TEXT AS "lastCommentTime",
               u.username,
               l.type,
-              l.group_id as "groupId"
+              l.group_id as "groupId",
+              l.content
           FROM links l
           JOIN users u ON u.id = l.user_id
           WHERE l.is_deleted = false and l.is_link_group = false ${queryEntends}

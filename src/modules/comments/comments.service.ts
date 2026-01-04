@@ -32,8 +32,10 @@ export class CommentsService {
     const limit = params.limit
     const offset = params.offset
 
-    const condition = user.level as LEVEL === LEVEL.ADMIN ? `` : `c.user_id = ${user.id} AND `
-   
+    let condition = user.level as LEVEL === LEVEL.ADMIN ? `` : `c.user_id = ${user.id} AND `
+    if (params.groupId) {
+      condition += ` l.group_id = ${params.groupId} AND `
+    }  
     const query = `
       SELECT 
           c.id,
