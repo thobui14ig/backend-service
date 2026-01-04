@@ -101,7 +101,7 @@ export class LinkService {
     }
 
     if (groupId) {
-      queryEntends += ` AND l.group_id = ${groupId}`
+      queryEntends += ` AND l.group_id = ${groupId} AND l.group_id IS NOT NULL`
     }
 
     const query = `
