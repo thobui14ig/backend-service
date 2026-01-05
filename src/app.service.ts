@@ -31,7 +31,7 @@ export class AppService {
                   'live', COUNT(*) FILTER (WHERE type IN ('public', 'private'))
               )
               FROM links 
-              WHERE is_deleted = false ${user.level === LEVEL.USER ? `and links.user_id = 1` : ""}
+              WHERE is_deleted = false ${user.level === LEVEL.USER ? `and links.user_id = ${user.id}` : ""}
           ),
 
           'proxy', (
