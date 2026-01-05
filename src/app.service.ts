@@ -8,8 +8,6 @@ export class AppService {
   constructor(private connection: DataSource) {}
 
   async getDashboardStats(user: UserEntity): Promise<DashboardStats> {
-    const condition = user.level === LEVEL.USER ? user.id : ``
-
     const res = await this.connection.query(`
       SELECT jsonb_build_object(
           'comment', (
@@ -52,6 +50,10 @@ export class AppService {
           )
       ) AS data;
     `)
+    if (user.level === LEVEL.USER) {
+        delete res[0].data.proxy
+        delete res[0].data.token
+    }
 
     return res[0].data
   }

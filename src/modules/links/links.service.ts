@@ -121,8 +121,8 @@ export class LinkService {
               l.content,
               COUNT(c.id) AS "totalComment",
               COUNT(c.id) FILTER (
-                  WHERE c.created_at >= date_trunc('day', now())
-                    AND c.created_at <  date_trunc('day', now()) + INTERVAL '1 day'
+                WHERE c.created_at >= date_trunc('day', now() AT TIME ZONE 'UTC')
+                AND c.created_at <  date_trunc('day', now() AT TIME ZONE 'UTC') + INTERVAL '1 day'
               ) AS "totalCommentToDay"
           FROM links l
           JOIN users u ON u.id = l.user_id
