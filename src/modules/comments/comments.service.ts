@@ -1,4 +1,3 @@
-import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as dayjs from 'dayjs';
@@ -7,7 +6,6 @@ import * as utc from 'dayjs/plugin/utc';
 import { DataSource, Repository } from 'typeorm';
 import { LEVEL, UserEntity } from '../user/entities/user.entity';
 import { IGetCommentParams } from './comments.service.i';
-import { UpdateCommentDto } from './dto/update-comment.dto';
 import { CommentEntity } from './entities/comment.entity';
 
 dayjs.extend(utc);
@@ -15,15 +13,14 @@ dayjs.extend(timezone);
 
 @Injectable()
 export class CommentsService {
-  vnTimezone = 'Asia/Bangkok';
   constructor(
     @InjectRepository(CommentEntity)
     private repo: Repository<CommentEntity>,
     private readonly connection: DataSource,
   ) { }
   async findAll(user: UserEntity, params: IGetCommentParams) {
-    const vnNowStart = dayjs(params.startDate).tz(this.vnTimezone)
-    const vnNowEnd = dayjs(params.endDate).tz(this.vnTimezone)
+    const vnNowStart = dayjs(params.startDate).tz(params.timezone)
+    const vnNowEnd = dayjs(params.endDate).tz(params.timezone)
     const startDate = vnNowStart.startOf('day').utc().format('YYYY-MM-DD HH:mm:ss');
     const endDate = vnNowEnd.endOf('day').utc().format('YYYY-MM-DD HH:mm:ss');
     const keyword = params?.keyword?.length > 0 ? params?.keyword?.trim() : null

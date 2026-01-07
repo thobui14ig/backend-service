@@ -11,6 +11,7 @@ export interface BodyLinkQuery {
     userId: number
     keyword: string
     groupId: number | null
+    timezone: string
 }
 
 export interface ISettingLinkDto {

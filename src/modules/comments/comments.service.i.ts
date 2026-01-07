@@ -1,10 +1,11 @@
 import dayjs from "dayjs"
 
 export interface IGetCommentParams {
-    startDate: dayjs.Dayjs
-    endDate: dayjs.Dayjs
+    startDate: string
+    endDate: string
     limit: number
     offset: number
     keyword?: string
     groupId?: number | null
+    timezone: string
 }

@@ -14,8 +14,6 @@ dayjs.extend(timezone);
 
 @Injectable()
 export class LinkService {
-  vnTimezone = 'Asia/Bangkok';
-
   constructor(
     @InjectRepository(LinkEntity)
     private repo: Repository<LinkEntity>,
@@ -82,7 +80,10 @@ export class LinkService {
   }
 
   async getAll(body: BodyLinkQuery, level: LEVEL, userIdByUerLogin: number, isFilter: boolean, limit: number, offset: number) {
-    const { type, userId, groupId } = body
+    const { type, userId, groupId, timezone } = body
+    const currentDay = dayjs().tz(timezone)
+    const startDate = currentDay.startOf('day').utc().format('YYYY-MM-DD HH:mm:ss');
+    const endDate = currentDay.endOf('day').utc().format('YYYY-MM-DD HH:mm:ss');
     let queryEntends = ``
     const keyword = body.keyword?.length > 0 ? body.keyword?.trim() : null
 
@@ -121,8 +122,8 @@ export class LinkService {
               l.content,
               COUNT(c.id) AS "totalComment",
               COUNT(c.id) FILTER (
-                WHERE c.created_at >= date_trunc('day', now() AT TIME ZONE 'UTC')
-                AND c.created_at <  date_trunc('day', now() AT TIME ZONE 'UTC') + INTERVAL '1 day'
+                WHERE c.created_at >= '${startDate}'
+                AND c.created_at < '${endDate}'
               ) AS "totalCommentToDay"
           FROM links l
           JOIN users u ON u.id = l.user_id

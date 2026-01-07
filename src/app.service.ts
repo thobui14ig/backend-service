@@ -2,20 +2,29 @@ import { Injectable } from '@nestjs/common';
 import { LEVEL, UserEntity } from './modules/user/entities/user.entity';
 import { DataSource } from 'typeorm';
 import { DashboardStats } from './app.controller.i';
+import * as dayjs from 'dayjs';
+import * as timezone from 'dayjs/plugin/timezone';
+import * as utc from 'dayjs/plugin/utc';
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 @Injectable()
 export class AppService {
   constructor(private connection: DataSource) {}
 
-  async getDashboardStats(user: UserEntity): Promise<DashboardStats> {
+  async getDashboardStats(user: UserEntity, timezone: string): Promise<DashboardStats> {
+    const currentDay = dayjs().tz(timezone)
+    const startDate = currentDay.startOf('day').utc().format('YYYY-MM-DD HH:mm:ss');
+    const endDate = currentDay.endOf('day').utc().format('YYYY-MM-DD HH:mm:ss');
+    
     const res = await this.connection.query(`
       SELECT jsonb_build_object(
           'comment', (
 	          SELECT jsonb_build_object(
 	              'total', COUNT(*),
 	              'today', COUNT(*) FILTER (
-	                  WHERE c.created_at >= date_trunc('day', now() AT TIME ZONE 'UTC')
-	                    AND c.created_at <  date_trunc('day', now() AT TIME ZONE 'UTC') + INTERVAL '1 day'
+	                  WHERE c.created_at >= '${startDate}'
+	                    AND c.created_at <  '${endDate}'
 	              )
 	          )
 	          FROM comments c
