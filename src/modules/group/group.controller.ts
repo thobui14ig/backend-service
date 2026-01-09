@@ -18,7 +18,7 @@ export class GroupFacebookController {
   @Get()
   findAll(@Req() req: Request,) {
     const user = getUser(req);
-    return this.groupService.findAll(user.id);
+    return this.groupService.findAll(user);
   }
 
   @Get(':id')

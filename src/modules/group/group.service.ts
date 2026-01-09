@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { GroupEntity } from './entities/group.entity';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
+import { LEVEL, UserEntity } from '../user/entities/user.entity';
 
 @Injectable()
 export class GroupService {
@@ -17,10 +18,17 @@ export class GroupService {
     return this.repo.save(arg)
   }
 
-  findAll(userId: number) {
+  findAll(user: UserEntity) {
+    if (user.level == LEVEL.ADMIN) {
+      return this.repo.find({
+        order: {
+          id: "DESC"
+        }
+      })      
+    }
     return this.repo.find({
       where: {
-        userId
+        userId: user.id
       },
       order: {
         id: "DESC"
