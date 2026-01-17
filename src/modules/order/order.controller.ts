@@ -3,7 +3,7 @@ import { Request } from "express";
 import { getUser } from "src/common/utils/user";
 import { OrderService } from "./order.service";
 import { Role, Roles } from "src/common/decorators/roles.decorator";
-import { ConfirmDto, CreateOrderDto } from "./order.controller.i";
+import { BuyVipDto, ConfirmDto, CreateOrderDto } from "./order.controller.i";
 
 @Controller('orders')
 export class OrderController {
@@ -25,5 +25,11 @@ export class OrderController {
   @Roles(Role.ADMIN)
   confirm(@Body() body: ConfirmDto) {
     return this.orderService.confirm(body.orderId);
+  }
+
+  @Post("/buy-vip")
+  orderVip(@Req() req: Request, @Body() body: BuyVipDto) {
+    const user = getUser(req);
+    return this.orderService.buyVip(body, user.id)
   }
 }

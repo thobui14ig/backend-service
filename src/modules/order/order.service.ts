@@ -2,9 +2,10 @@ import { BadRequestException, Injectable, NotFoundException } from "@nestjs/comm
 import { InjectRepository } from "@nestjs/typeorm";
 import { OrderEntity } from "./entities/order.entity";
 import { DataSource, Repository } from "typeorm";
-import { CreateOrderDto } from "./order.controller.i";
+import { BuyVipDto, CreateOrderDto } from "./order.controller.i";
 import { LEVEL, UserEntity } from "../user/entities/user.entity";
 import { UserService } from "../user/user.service";
+import { getPlan } from "src/common/utils/plan";
 
 @Injectable()
 export class OrderService {
@@ -27,9 +28,17 @@ export class OrderService {
   findAll(userId: number, level: LEVEL) {
     if (level === LEVEL.ADMIN) {
       return this.repo.find({
-          order: {
-              id: "DESC"
+        relations: {
+          user: true
+        },
+        order: {
+            id: "DESC"
+        },
+        select: {
+          user: {
+            username: true
           }
+        }
       })      
     }
 
@@ -86,4 +95,37 @@ export class OrderService {
     });
   }
 
+  buyVip(dto: BuyVipDto, userId: number) {
+    const { planId } = dto
+    const planInfo = getPlan(planId)
+  
+    return this.connection.transaction(async (manager) => {
+      const user = await manager.findOne(UserEntity, {
+        where: { id: userId },
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      if (!user) {
+        throw new NotFoundException('User Not Found!');
+      }
+      
+      if (user.planId) {
+        throw new BadRequestException('Liên hệ admin để mua vip mới!'); 
+      }  
+
+      if (user.balance < planInfo.price) {
+        throw new BadRequestException('Bạn không đủ tiền!'); 
+      } 
+
+      await manager
+        .createQueryBuilder()
+        .update(UserEntity)
+        .set({
+          balance: () => `"balance" - ${Number(planInfo.price)}`,
+          planId
+        })
+        .where('id = :id', { id: user.id })
+        .execute();  
+    })
+  }
 }

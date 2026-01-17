@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
+import { UserEntity } from 'src/modules/user/entities/user.entity';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 
 export type OrderStatus = 'pending' | 'confirmed' | 'rejected' | 'cancelled';
 
@@ -41,4 +42,8 @@ export class OrderEntity {
         }
     })
     createdAt: Date;
+
+    @ManyToOne(() => UserEntity, (user) => user.orders)
+    @JoinColumn({ name: 'user_id' })
+    user: UserEntity
 }

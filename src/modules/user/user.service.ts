@@ -61,7 +61,9 @@ export class UserService {
       select: {
         id: true, 
         username: true,
-        level: true
+        level: true,
+        balance: true,
+        planId: true
       }
     })
 
@@ -86,7 +88,8 @@ export class UserService {
         id: true, 
         username: true,
         level: true,
-        balance: true
+        balance: true,
+        planId: true
       }
     })
 

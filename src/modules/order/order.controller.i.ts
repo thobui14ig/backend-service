@@ -9,3 +9,8 @@ export class ConfirmDto {
     @IsNumber()
     orderId: number
 }
+
+export class BuyVipDto {
+    @IsNumber()
+    planId: number
+}

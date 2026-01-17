@@ -8,6 +8,7 @@ import {
 import { LinkEntity } from '../../links/entities/links.entity';
 import { CommentEntity } from 'src/modules/comments/entities/comment.entity';
 import { CookieEntity } from 'src/modules/cookie/entities/cookie.entity';
+import { OrderEntity } from 'src/modules/order/entities/order.entity';
 
 export enum LEVEL {
   ADMIN = 1,
@@ -31,6 +32,9 @@ export class UserEntity {
   @Column()
   balance: number
 
+  @Column({ name: "plan_id" })
+  planId: number
+
   @Column({ default: false, name: 'is_deleted' })
   isDelete: Boolean;
 
@@ -45,4 +49,7 @@ export class UserEntity {
 
   @OneToMany(() => CookieEntity, (comment) => comment.cookie)
   cookie: CookieEntity[]
+
+  @OneToMany(() => OrderEntity, (order) => order.user)
+  orders: OrderEntity[]
 }
