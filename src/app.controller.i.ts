@@ -36,6 +36,5 @@ export class UserSupportDto {
   @IsString()
   content: string;
 
-  @IsString()
-  amount: number;
+  amount: string | number;
 }
