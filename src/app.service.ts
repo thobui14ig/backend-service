@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { LEVEL, UserEntity } from './modules/user/entities/user.entity';
 import { DataSource } from 'typeorm';
-import { DashboardStats } from './app.controller.i';
+import { DashboardStats, UserSupportDto } from './app.controller.i';
 import * as dayjs from 'dayjs';
 import * as timezone from 'dayjs/plugin/timezone';
 import * as utc from 'dayjs/plugin/utc';
@@ -65,5 +65,21 @@ export class AppService {
     }
 
     return res[0].data
+  }
+
+  getUserSupport() {
+    return this.connection.query(`
+        SELECT id, name, content, amount
+        FROM user_support
+        ORDER BY created_at DESC;       
+    `)
+  }
+
+  insertUserSupport(dto: UserSupportDto) {
+    const { content, amount, name } = dto
+    return this.connection.query(`
+        INSERT INTO user_support (name, content, amount)
+        VALUES ('${name}', '${content}', ${amount??0});        
+    `)
   }
 }

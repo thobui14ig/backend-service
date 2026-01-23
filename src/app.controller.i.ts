@@ -1,3 +1,5 @@
+import { IsString } from "class-validator";
+
 export interface DashboardStats {
   link: LinkStats;
   proxy: ProxyStats;
@@ -25,4 +27,15 @@ export interface TokenStats {
 export interface CommentStats {
   today: number;
   total: number;
+}
+
+export class UserSupportDto {
+  @IsString()
+  name: string;
+
+  @IsString()
+  content: string;
+
+  @IsString()
+  amount: number;
 }
