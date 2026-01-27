@@ -36,6 +36,8 @@ import { PhoneCustomerEntity } from './modules/phone-customer/entities/phone-cus
 import { RolesGuard } from './common/guard/roles.guard';
 import { GroupModule } from './modules/group/group.module';
 import { GroupEntity } from './modules/group/entities/group.entity';
+import { PageModule } from './modules/page/page.module';
+import { PageEntity } from './modules/page/entities/page.entity';
 
 @Module({
   imports: [
@@ -68,7 +70,8 @@ import { GroupEntity } from './modules/group/entities/group.entity';
           OrderEntity,
           GroupFacebookEntity,
           PhoneCustomerEntity,
-          GroupEntity
+          GroupEntity,
+          PageEntity,
         ],
         // logging: true,
         // synchronize: true, // chỉ dùng trong dev!
@@ -92,7 +95,8 @@ import { GroupEntity } from './modules/group/entities/group.entity';
     OrderModule,
     GroupFacebookModule,
     PhoneCustomerModule,
-    GroupModule
+    GroupModule,
+    PageModule
   ],
   controllers: [AppController],
   providers: [
