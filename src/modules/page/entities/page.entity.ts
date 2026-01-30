@@ -9,6 +9,9 @@ export class PageEntity {
     @Column({ name: "page_id" })
     pageId: string;
 
+    @Column({ name: "name" })
+    name: string;
+
     @Column({ name: "group_id" })
     groupId: number;
 
