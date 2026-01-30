@@ -131,7 +131,14 @@ export class LinkService {
           LEFT JOIN comments c ON c.link_id = l.id
           LEFT JOIN page p ON p.page_id = l.page_id
           WHERE l.is_deleted = false and l.is_link_group = false ${queryEntends}
-          GROUP BY
+        ${keyword ? `AND (
+            l.post_id::text ~* '${keyword}'
+            OR l.link_name::text ~* '${keyword}'
+            OR l.link_url::text ~* '${keyword}'
+            OR l.status::text ~* '${keyword}'
+            OR u.username::text ~* '${keyword}'
+          )` : ""}
+            GROUP BY
             l.id,
             l.link_name,
             l.link_url,
@@ -145,14 +152,6 @@ export class LinkService {
             l.group_id,
             l.content,
             p.name
- 
-        ${keyword ? `AND (
-            l.post_id::text ~* '${keyword}'
-            OR l.link_name::text ~* '${keyword}'
-            OR l.link_url::text ~* '${keyword}'
-            OR l.status::text ~* '${keyword}'
-            OR u.username::text ~* '${keyword}'
-          )` : ""}
       )
       SELECT *, (SELECT COUNT(*) FROM filtered_links) AS "totalCount"
       FROM filtered_links
