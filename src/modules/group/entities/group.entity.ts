@@ -11,7 +11,4 @@ export class GroupEntity {
 
     @Column({ name: "user_id" })
     userId: number;
-
-    @OneToMany(() => PageEntity, (page) => page.group)
-    pages: []
 }

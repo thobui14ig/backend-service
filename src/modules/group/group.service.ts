@@ -44,7 +44,10 @@ export class GroupService {
     });
   }
 
-  async update(id: number, params: UpdateGroupDto, userId: number) {
+  async update(id: number, params: UpdateGroupDto, userId: number, level: LEVEL) {
+    if (level === LEVEL.ADMIN) {
+      return this.repo.save({ id, ...params })
+    }
     const group = await this.repo.findOne({
       where: {
         id,
@@ -58,7 +61,10 @@ export class GroupService {
     throw new ForbiddenException('Bạn không có quyền');
   }
 
-  async remove(id: number, userId: number) {
+  async remove(id: number, userId: number, level: LEVEL) {
+    if (level === LEVEL.ADMIN) {
+      return this.repo.delete(id)
+    }
     const group = await this.repo.findOne({
       where: {
         id,

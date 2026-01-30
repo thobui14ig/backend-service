@@ -4,6 +4,6 @@ export class CreatePageDto {
     @IsString({ message: "PageId phải là string" })
     pageId: string
 
-    @IsNumber()
-    groupId: number
+    @IsString({ message: "Name phải là string" })
+    name: string
 }

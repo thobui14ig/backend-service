@@ -12,13 +12,6 @@ export class PageEntity {
     @Column({ name: "name" })
     name: string;
 
-    @Column({ name: "group_id" })
-    groupId: number;
-
     @Column({ name: "user_id" })
     userId: number;
-
-    @ManyToOne(() => GroupEntity, (group) => group.pages)
-    @JoinColumn({ name: 'group_id' })
-    group: GroupEntity;
 }

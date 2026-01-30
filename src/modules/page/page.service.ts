@@ -21,9 +21,6 @@ export class PageService {
   findAll(user: UserEntity) {
     if (user.level == LEVEL.ADMIN) {
       return this.repo.find({
-        relations: {
-          group: true,
-        },
         order: {
           id: "DESC"
         }
@@ -32,9 +29,6 @@ export class PageService {
     return this.repo.find({
       where: {
         userId: user.id
-      },
-      relations: {
-        group: true,
       },
       order: {
         id: "DESC"

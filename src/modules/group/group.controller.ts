@@ -29,12 +29,12 @@ export class GroupFacebookController {
   @Patch(':id')
   update(@Param('id') id: string, @Body() dto: UpdateGroupDto, @Req() req: Request) {
     const user = getUser(req);
-    return this.groupService.update(+id, dto, user.id);
+    return this.groupService.update(+id, dto, user.id, user.level);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string,  @Req() req: Request) {
     const user = getUser(req);
-    return this.groupService.remove(+id, user.id);
+    return this.groupService.remove(+id, user.id, user.level);
   }
 }
