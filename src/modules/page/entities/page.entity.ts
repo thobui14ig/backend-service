@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { GroupEntity } from 'src/modules/group/entities/group.entity';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 
 @Entity('page')
 export class PageEntity {
@@ -13,4 +14,8 @@ export class PageEntity {
 
     @Column({ name: "user_id" })
     userId: number;
+
+    @ManyToOne(() => GroupEntity, (group) => group.pages)
+    @JoinColumn({ name: 'group_id' })
+    group: GroupEntity;
 }
