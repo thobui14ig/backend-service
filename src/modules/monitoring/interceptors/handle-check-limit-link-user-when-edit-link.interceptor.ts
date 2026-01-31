@@ -8,6 +8,7 @@ import {
     NestInterceptor,
 } from '@nestjs/common';
 import { isNullOrUndefined } from 'src/common/utils/check-utils';
+import { getPlan } from 'src/common/utils/plan';
 import { LinkStatus } from 'src/modules/links/entities/links.entity';
 import { LinkService } from 'src/modules/links/links.service';
 import { UserService } from 'src/modules/user/user.service';
@@ -19,17 +20,11 @@ export class CheckLimitLinkUserWhenEditLinkInterceptor implements NestIntercepto
     async intercept(context: ExecutionContext, next: CallHandler) {
         const request = context.switchToHttp().getRequest();
         const user = request["user"]
-        const status = request.body["status"] as LinkStatus
-        const isHideCmt = request.body["hideCmt"]
         const userFromDb = await this.userService.findById(user["id"])
-        const totalLink = await this.linkService.getTotalLinkUserByStatus(user["id"], status, isHideCmt) + 1
+        const totalLink = await this.linkService.getTotalLinkUserByStatus(user["id"]) + 1
 
         if (userFromDb && !isNullOrUndefined(totalLink)) {
-            if (isHideCmt === false) {
 
-            } else {
-
-            }
 
             return next.handle()
         } else {

@@ -231,12 +231,11 @@ export class LinkService {
     });
   }
 
-  async getTotalLinkUserByStatus(userId: number, status: LinkStatus, hideCmt: boolean) {
+  async getTotalLinkUserByStatus(userId: number) {
     const count = await this.connection
       .getRepository(LinkEntity)
       .countBy({
         userId,
-        status,
         isDelete: false
       })
 
@@ -244,7 +243,7 @@ export class LinkService {
   }
 
   async getTotalLinkUserWhenUpdateMultipleLink(userId: number, status: LinkStatus, hideCmt: boolean, linkIds: number[]) {
-    const a = await this.getTotalLinkUserByStatus(userId, status, hideCmt)
+    const a = await this.getTotalLinkUserByStatus(userId)
     const b = await this.connection
       .getRepository(LinkEntity)
       .countBy({
