@@ -223,8 +223,8 @@ export class LinkService {
         throw new ForbiddenException('Bạn không có quyền xoá link này');
       }
 
-      record.isDelete = true;
-      return repo.save(record);
+      // record.isDelete = true;
+      return repo.delete(record);
     });
   }
 
