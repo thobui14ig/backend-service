@@ -227,7 +227,7 @@ export class LinkService {
       }
 
       // record.isDelete = true;
-      return repo.delete(record);
+      return repo.delete(id);
     });
   }
 

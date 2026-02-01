@@ -14,4 +14,7 @@ export class PageEntity {
 
     @Column({ name: "user_id" })
     userId: number;
+
+    @Column({ name: "is_active" })
+    isActive: boolean;
 }

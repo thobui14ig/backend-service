@@ -2,9 +2,9 @@ import { ForbiddenException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { LEVEL, UserEntity } from '../user/entities/user.entity';
-import { UpdatePageDto } from './dto/update-group.dto';
+import { UpdatePageDto } from './dto/update-page.dto';
 import { PageEntity } from './entities/page.entity';
-import { CreatePageDto } from './dto/create-group.dto';
+import { CreatePageDto } from './dto/create-page.dto';
 
 @Injectable()
 export class PageService {
