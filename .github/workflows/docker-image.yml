@@ -28,8 +28,8 @@ jobs:
           file: Dockerfile
           push: true
           tags: |
-            thobui1996/backend-service:latest
-            thobui1996/backend-service:${{ github.sha }}
+            thanhtho96/back:latest
+            thanhtho96/back:${{ github.sha }}
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.0.3
         with:
