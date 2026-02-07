@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -41,7 +41,19 @@ export class UserService {
     return null
   }
 
-  create(user: CreateUserDto) {
+  async create(user: CreateUserDto) {
+    const isExist = await this.repo.findOne({
+      where: {
+        username: user.username
+      }
+    })
+
+    if (isExist) {
+      throw new HttpException(
+        `User đã tồn tại.`,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
     return this.repo.save(user);
   }
 
