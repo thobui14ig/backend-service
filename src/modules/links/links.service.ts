@@ -86,16 +86,8 @@ export class LinkService {
     const endDate = currentDay.endOf('day').utc().format('YYYY-MM-DD HH:mm:ss');
     let queryEntends = ``
     const keyword = body.keyword?.length > 0 ? body.keyword?.trim() : null
-
-    if (isFilter) {
-      if (level === LEVEL.ADMIN) {
-        if (type) {
-          queryEntends += ` AND l.type='${type}'`
-        }
-        if (userId) {
-          queryEntends += ` AND l.user_id=${userId}`
-        }
-      }
+    if (type) {
+      queryEntends += ` AND l.type='${type}'`
     }
     if (level === LEVEL.USER) {
       queryEntends += ` AND l.user_id = ${userIdByUerLogin}`
