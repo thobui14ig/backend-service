@@ -1,4 +1,4 @@
-import { IsBoolean, IsString } from "class-validator";
+import { IsBoolean, IsOptional, IsString } from "class-validator";
 
 export class CreatePageDto {
     @IsString({ message: "PageId phải là string" })
@@ -8,5 +8,6 @@ export class CreatePageDto {
     name: string
 
     @IsBoolean()
+    @IsOptional()
     isActive: boolean
 }
