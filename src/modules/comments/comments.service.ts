@@ -33,6 +33,10 @@ export class CommentsService {
     if (params.groupId) {
       condition += ` l.group_id = ${params.groupId} AND `
     }  
+
+    if (params.pageId) {
+      condition += ` l.page_id = '${params.pageId}' AND `
+    }
     const query = `
       SELECT 
           c.id,

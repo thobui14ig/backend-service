@@ -7,5 +7,6 @@ export interface IGetCommentParams {
     offset: number
     keyword?: string
     groupId?: number | null
+    pageId?: number | null
     timezone: string
 }
