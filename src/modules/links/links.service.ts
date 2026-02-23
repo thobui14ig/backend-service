@@ -83,7 +83,7 @@ export class LinkService {
   }
 
   async getAll(body: BodyLinkQuery, level: LEVEL, userIdByUerLogin: number, isFilter: boolean, limit: number, offset: number) {
-    const { type, userId, groupId, timezone } = body
+    const { type, groupId, timezone, pageId } = body
     const currentDay = dayjs().tz(timezone)
     const startDate = currentDay.startOf('day').utc().format('YYYY-MM-DD HH:mm:ss');
     const endDate = currentDay.endOf('day').utc().format('YYYY-MM-DD HH:mm:ss');
@@ -98,6 +98,10 @@ export class LinkService {
 
     if (groupId) {
       queryEntends += ` AND l.group_id = ${groupId} AND l.group_id IS NOT NULL`
+    }
+
+    if (pageId) {
+      queryEntends += ` AND l.page_id = '${pageId}'`
     }
 
     const query = `

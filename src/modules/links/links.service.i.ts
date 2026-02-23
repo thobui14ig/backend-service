@@ -11,6 +11,7 @@ export interface BodyLinkQuery {
     userId: number
     keyword: string
     groupId: number | null
+    pageId: number | null
     timezone: string
 }
 
