@@ -1,6 +1,6 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { LEVEL, UserEntity } from '../user/entities/user.entity';
 import { UpdatePageDto } from './dto/update-page.dto';
 import { PageEntity } from './entities/page.entity';
@@ -11,6 +11,7 @@ export class PageService {
   constructor(
     @InjectRepository(PageEntity)
     private repo: Repository<PageEntity>,
+    private connection: DataSource,
   ) { }
 
   async create(params: CreatePageDto, userId: number) {
@@ -19,21 +20,25 @@ export class PageService {
   }
 
   findAll(user: UserEntity) {
-    if (user.level == LEVEL.ADMIN) {
-      return this.repo.find({
-        order: {
-          id: "DESC"
-        }
-      })      
+    let condition = ""
+
+    if (user.level != LEVEL.ADMIN) {
+      condition += `where p.user_id = ${user.id}`
     }
-    return this.repo.find({
-      where: {
-        userId: user.id
-      },
-      order: {
-        id: "DESC"
-      }
-    })
+
+    return this.connection.query(`
+      select p.id,
+      p.user_id as "userId",
+      p.page_id as "pageId",
+      p.name,
+      p.is_active as "isActive",
+      COUNT(l.id) AS "totalLink" 
+      from page p
+      join links l on l.page_id = p.page_id  
+      ${condition}
+      group by p.id   
+      order by p.id desc
+    `)
   }
 
   findOne(id: number) {
