@@ -33,6 +33,12 @@ export class LinkController {
     });
   }
 
+  @Get('get-total-link')
+  getTotalLink(@Req() req: Request) {
+    const user = getUser(req);
+    return this.linkService.getTotalLink(user.id)
+  }
+
   @Get('/:id')
   getUser(@Param('id') id: number) {
     return this.linkService.getOne(id);

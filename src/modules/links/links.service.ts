@@ -8,6 +8,8 @@ import { LEVEL } from '../user/entities/user.entity';
 import { UpdateLinkDTO } from './dto/update-link.dto';
 import { LinkEntity, LinkStatus } from './entities/links.entity';
 import { BodyLinkQuery, CreateLinkParams } from './links.service.i';
+import { UserService } from '../user/user.service';
+import { getPlan } from 'src/common/utils/plan';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -18,6 +20,7 @@ export class LinkService {
     @InjectRepository(LinkEntity)
     private repo: Repository<LinkEntity>,
     private connection: DataSource,
+    private userService: UserService
   ) { }
 
   async create(params: CreateLinkParams) {
@@ -248,14 +251,15 @@ export class LinkService {
     return a + b
   }
 
-  async getTotalLinkUser(userId: number) {
-    const response = await this.connection.query(`
-        SELECT
-          (SELECT COUNT(*) FROM links l WHERE l.user_id = u.id AND l.status = 'started' AND l.is_deleted = false) AS totalLinkOn,
-          (SELECT COUNT(*) FROM links l WHERE l.user_id = u.id AND l.status = 'pending' AND l.is_deleted = false) AS totalLinkOff
-          FROM users u
-          WHERE u.id = ${userId};
-      `)
-    return response[0]
+  async getTotalLink(userId: number) {
+    const total = await this.repo.count({
+      where: {
+        userId
+      }
+    });
+    const user = await this.userService.getInfo(userId)
+    const plan = getPlan(user.planId)
+
+    return `${total}/${plan?.maxLinks??0}`
   }
 }

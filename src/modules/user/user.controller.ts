@@ -4,7 +4,6 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { Request } from 'express';
 import { getUser } from 'src/common/utils/user';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { CheckLimitLinkUserInterceptor } from './interceptor/handle-check-limit-link-user.interceptor';
 import { Role, Roles } from 'src/common/decorators/roles.decorator';
 
 @Controller('users')
@@ -36,7 +35,6 @@ export class UserController {
 
   @Put()
   @Roles(Role.ADMIN)
-  // @UseInterceptors(CheckLimitLinkUserInterceptor)
   updateUser(@Body() updateUserDto: UpdateUserDto) {
     return this.userService.update(updateUserDto)
   }
