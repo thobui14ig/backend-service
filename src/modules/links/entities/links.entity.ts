@@ -72,6 +72,15 @@ export class LinkEntity {
   @Column({ name: 'group_id' })
   groupId: number;
 
+  @Column({ name: 'total_cmt' })
+  totalCmt: number;
+
+  @Column({ name: 'total_like' })
+  totalLike: number;
+
+  @Column({ name: 'thumbnail' })
+  thumbnail: string;
+
   @CreateDateColumn({
     name: 'created_at',
   })

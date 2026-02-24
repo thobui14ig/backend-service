@@ -125,7 +125,9 @@ export class LinkService {
               COUNT(c.id) FILTER (
                 WHERE c.created_at >= '${startDate}'
                 AND c.created_at < '${endDate}'
-              ) AS "totalCommentToDay"
+              ) AS "totalCommentToDay",
+               l.total_like as "totalLike",
+               l.total_cmt as "totalCmt"
           FROM links l
           JOIN users u ON u.id = l.user_id
           LEFT JOIN comments c ON c.link_id = l.id

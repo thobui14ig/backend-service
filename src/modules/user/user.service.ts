@@ -68,13 +68,14 @@ export class UserService {
   async getAll() {
     return this.repo
       .createQueryBuilder('user')
-      .where('user.is_deleted = false')
+      .where('user.is_deleted = false and user.level = 0')
       .select([
         'user.id',
         'user.username',
         'user.level',
         'user.balance',
-        'user.planId'
+        'user.planId',
+        'user.expiredAt'
       ])
       .loadRelationCountAndMap('user.totalLink', 'user.links')
       .getMany();
