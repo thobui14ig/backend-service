@@ -8,8 +8,6 @@ import {
     NestInterceptor,
 } from '@nestjs/common';
 import { isNullOrUndefined } from 'src/common/utils/check-utils';
-import { getPlan } from 'src/common/utils/plan';
-import { LinkStatus } from 'src/modules/links/entities/links.entity';
 import { LinkService } from 'src/modules/links/links.service';
 import { UserService } from 'src/modules/user/user.service';
 

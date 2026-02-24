@@ -97,7 +97,7 @@ export class OrderService {
 
   buyVip(dto: BuyVipDto, userId: number) {
     const { planId } = dto
-    const planInfo = getPlan(planId)
+    const planInfo = getPlan(planId, userId)
   
     return this.connection.transaction(async (manager) => {
       const user = await manager.findOne(UserEntity, {

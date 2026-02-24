@@ -262,7 +262,7 @@ export class LinkService {
       }
     });
     const user = await this.userService.getInfo(userId)
-    const plan = getPlan(user.planId)
+    const plan = getPlan(user.planId, user.id)
 
     return `${total}/${plan?.maxLinks??0}`
   }

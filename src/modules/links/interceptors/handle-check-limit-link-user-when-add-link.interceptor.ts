@@ -7,13 +7,10 @@ import {
     Injectable,
     NestInterceptor,
 } from '@nestjs/common';
-import { Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
-import { UserService } from 'src/modules/user/user.service';
-import { LinkService } from '../links.service';
-import { LinkStatus, LinkType } from '../entities/links.entity';
 import { isNullOrUndefined } from 'src/common/utils/check-utils';
 import { getPlan } from 'src/common/utils/plan';
+import { UserService } from 'src/modules/user/user.service';
+import { LinkService } from '../links.service';
 
 @Injectable()
 export class CheckLimitLinkUserWhenAddLinkInterceptor implements NestInterceptor {
@@ -29,7 +26,7 @@ export class CheckLimitLinkUserWhenAddLinkInterceptor implements NestInterceptor
                 HttpStatus.BAD_REQUEST,
             );
         }
-        const plan = getPlan(userFromDb.planId)
+        const plan = getPlan(userFromDb.planId, user.id)
         const totalLinkFromDb = await this.linkService.getTotalLinkUserByStatus(user["id"])
         const totalLink = totalLinkFromDb + request.body.links.length
 

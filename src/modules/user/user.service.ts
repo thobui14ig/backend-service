@@ -66,20 +66,18 @@ export class UserService {
   }
 
   async getAll() {
-    const res = await this.repo.find({
-      where: {
-        isDelete: false
-      },
-      select: {
-        id: true, 
-        username: true,
-        level: true,
-        balance: true,
-        planId: true
-      }
-    })
-
-    return res;
+    return this.repo
+      .createQueryBuilder('user')
+      .where('user.is_deleted = false')
+      .select([
+        'user.id',
+        'user.username',
+        'user.level',
+        'user.balance',
+        'user.planId'
+      ])
+      .loadRelationCountAndMap('user.totalLink', 'user.links')
+      .getMany();
   }
 
   delete(id: number) {
