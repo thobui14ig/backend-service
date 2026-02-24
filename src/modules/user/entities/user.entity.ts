@@ -41,6 +41,32 @@ export class UserEntity {
   @CreateDateColumn({ name: 'created_at', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 
+  @Column({ 
+    name: "expired_at",         
+    transformer: {
+        to: (value) => value,
+        from: (value: Date) => {
+        if (!value) return null;
+
+        const pad = (n: number, z = 2) => String(n).padStart(z, '0');
+
+        return (
+            value.getFullYear() + '-' +
+            pad(value.getMonth() + 1) + '-' +
+            pad(value.getDate()) + ' ' +
+            pad(value.getHours()) + ':' +
+            pad(value.getMinutes()) + ':' +
+            pad(value.getSeconds()) + '.' +
+            pad(value.getMilliseconds(), 3)
+        );
+        }
+        } 
+      })
+  expiredAt: string;
+
+  @Column({ default: false, name: 'is_active' })
+  isActive : Boolean;
+
   @OneToMany(() => LinkEntity, (link) => link.user)
   links: LinkEntity[]
 

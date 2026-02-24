@@ -101,7 +101,8 @@ export class UserService {
         username: true,
         level: true,
         balance: true,
-        planId: true
+        planId: true,
+        expiredAt: true
       }
     })
 
