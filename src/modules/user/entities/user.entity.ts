@@ -67,6 +67,9 @@ export class UserEntity {
   @Column({ default: false, name: 'is_active' })
   isActive : Boolean;
 
+  @Column({ default: 0, name: 'type_config' })
+  typeConfig: number
+
   @OneToMany(() => LinkEntity, (link) => link.user)
   links: LinkEntity[]
 

@@ -127,7 +127,8 @@ export class LinkService {
                 AND c.created_at < '${endDate}'
               ) AS "totalCommentToDay",
                l.total_like as "totalLike",
-               l.total_cmt as "totalCmt"
+               l.total_cmt as "totalCmt",
+               l.thumbnail
           FROM links l
           JOIN users u ON u.id = l.user_id
           LEFT JOIN comments c ON c.link_id = l.id
