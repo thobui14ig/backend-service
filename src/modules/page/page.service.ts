@@ -32,11 +32,13 @@ export class PageService {
       p.page_id as "pageId",
       p.name,
       p.is_active as "isActive",
+      u.username as "username",
       COUNT(l.id) AS "totalLink" 
       from page p
       left join links l on l.page_id = p.page_id  
+      left join users u on u.id = p.user_id
       ${condition}
-      group by p.id   
+      group by p.id  , u.username 
       order by p.id desc
     `)
   }

@@ -1,4 +1,3 @@
-import { UserEntity } from "../user/entities/user.entity";
 import { CreateLinkDTO } from "./dto/create-link.dto";
 import { LinkStatus, LinkType } from "./entities/links.entity";
 
