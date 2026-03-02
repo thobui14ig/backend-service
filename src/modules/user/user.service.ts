@@ -108,4 +108,23 @@ export class UserService {
 
     return res;
   }
+
+  async changePass(dto: { password: string }, userId: number) {
+    const user = await this.repo.findOne({
+      where: {
+        id: userId
+      }
+    })
+
+    if (!user) {
+      throw new HttpException(
+        `User không tồn tại.`,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    user.password = dto.password
+
+    return this.repo.save(user);
+  }
 }

@@ -44,4 +44,10 @@ export class UserController {
   deleteUser(@Param('id') id: number) {
     return this.userService.delete(id)
   }
+
+  @Post('change-pass')
+  changePass(@Body() dto: { password: string }, @Req() req: Request) {
+    const user = getUser(req);
+    return this.userService.changePass(dto, user.id);
+  }
 }
