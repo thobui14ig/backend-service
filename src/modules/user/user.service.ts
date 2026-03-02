@@ -54,7 +54,12 @@ export class UserService {
         HttpStatus.BAD_REQUEST,
       );
     }
-    return this.repo.save(user);
+
+    const res = await this.repo.save(user);
+    return this.connection.query(`
+      INSERT INTO config (user_id)
+      VALUES (${res.id});
+    `)
   }
 
   findById(id: number) {
