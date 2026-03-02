@@ -59,7 +59,8 @@ export class CommentsService {
           ON l.id = c.link_id and l.is_deleted = false and l.is_link_group = false
       WHERE 
         ${condition}
-         c.created_at BETWEEN '${startDate}' AND '${endDate}'
+        ${startDate && endDate ?  `c.created_at BETWEEN '${startDate}' AND '${endDate}'` : ""}
+        
           ${keyword ? `AND (
             c.message::text ~* '${keyword}' 
             OR c.post_id::text ~* '${keyword}'

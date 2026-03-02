@@ -95,4 +95,34 @@ export class AppService {
         
     return res?.[0]??null
   }
+
+  async getExportLink(linkId: number) {
+    const res = await this.connection.query(`
+            SELECT comment_ids as "commentIds"
+        FROM export_link
+        WHERE link_id = ${linkId};    
+    `)
+
+    return res?.[0]??[]
+  }
+
+  async updateExportLink(linkId: number, commentIds: number[]) {
+        return this.connection.query(
+        `
+        INSERT INTO export_link (link_id, comment_ids)
+        VALUES ($1, $2::bigint[])
+        ON CONFLICT (link_id)
+        DO UPDATE SET
+            comment_ids = export_link.comment_ids || (
+            SELECT COALESCE(ARRAY(
+                SELECT x
+                FROM UNNEST(EXCLUDED.comment_ids) AS x
+                WHERE NOT (x = ANY(export_link.comment_ids))
+            ), '{}')
+            )
+        RETURNING *;
+        `,
+        [linkId, commentIds]
+        );
+  }
 }

@@ -1,7 +1,7 @@
 import dayjs from "dayjs"
 
 export interface IGetCommentParams {
-    startDate: string
+    startDate: string 
     endDate: string
     limit: number
     offset: number
