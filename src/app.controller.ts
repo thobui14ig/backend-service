@@ -26,4 +26,10 @@ export class AppController {
   insertUserSupport(@Body() body: UserSupportDto) {
     return this.appService.insertUserSupport(body)
   }
+
+  @Get('config')
+  getConfig(@Req() req: Request) {
+    const user = getUser(req);
+    return this.appService.getConfig(user.id)
+  }
 }

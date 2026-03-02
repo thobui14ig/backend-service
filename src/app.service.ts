@@ -82,4 +82,17 @@ export class AppService {
         VALUES ('${name}', '${content}', ${amount??0});        
     `)
   }
+
+  async getConfig(userId: number) {
+    const res = await this.connection.query(`
+        select 
+            user_id as "userId",
+            excel_id as "excelId",
+            link_id as "linkId"
+            from config
+            where user_id=${userId}    
+    `)
+        
+    return res?.[0]??null
+  }
 }
