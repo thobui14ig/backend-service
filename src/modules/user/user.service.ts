@@ -45,7 +45,7 @@ export class UserService {
     const user = {
       ...dto,
       username: dto.username.trim().toLowerCase(),
-      password: dto.password.trim().toLowerCase(),
+      password: dto.password.trim(),
     };
     const isExist = await this.repo.findOne({
       where: {
@@ -85,14 +85,20 @@ export class UserService {
         'user.level',
         'user.balance',
         'user.planId',
-        'user.expiredAt'
+        'user.expiredAt',
+        'user.isActive'
       ])
       .loadRelationCountAndMap('user.totalLink', 'user.links')
       .getMany();
   }
 
-  delete(id: number) {
-    return this.repo.delete(id);
+  async delete(id: number) {
+    try {
+      return await this.repo.delete(id);
+      
+    } catch (error) {
+      console.log(error)
+    }
   }
 
   update(user: UpdateUserDto) {

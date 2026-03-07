@@ -25,7 +25,7 @@ export class AuthController {
     res: Response,
   ) {
     const response = await this.authService.signIn(
-      signInDto.username,
+      (signInDto.username).trim().toLowerCase(),
       signInDto.password,
     );
 
