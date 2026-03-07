@@ -41,8 +41,12 @@ export class UserService {
     return null
   }
 
-  async create(user: CreateUserDto) {
-    console.log(1111, user)
+  async create(dto: CreateUserDto) {
+    const user = {
+      ...dto,
+      username: dto.username.trim().toLowerCase(),
+      password: dto.password.trim().toLowerCase(),
+    };
     const isExist = await this.repo.findOne({
       where: {
         username: user.username

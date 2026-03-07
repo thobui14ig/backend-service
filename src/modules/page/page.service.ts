@@ -66,14 +66,14 @@ export class PageService {
   }
 
   async remove(id: number, userId: number) {
-    const group = await this.repo.findOne({
+    const page = await this.repo.findOne({
       where: {
         id,
         userId
       }
     })
     
-    if (group) {
+    if (page) {
       return this.repo.delete(id)
     }
 
