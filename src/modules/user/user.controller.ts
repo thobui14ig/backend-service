@@ -5,12 +5,14 @@ import { Request } from 'express';
 import { getUser } from 'src/common/utils/user';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Role, Roles } from 'src/common/decorators/roles.decorator';
+import { Public } from 'src/common/guard/guard';
 
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) { }
 
   @Post()
+  @Public()
   create(@Body() createUserDto: CreateUserDto) {
     return this.userService.create(createUserDto);
   }
