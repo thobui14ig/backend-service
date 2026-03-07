@@ -42,6 +42,7 @@ export class UserService {
   }
 
   async create(user: CreateUserDto) {
+    console.log(1111, user)
     const isExist = await this.repo.findOne({
       where: {
         username: user.username
