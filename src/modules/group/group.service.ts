@@ -21,14 +21,34 @@ export class GroupService {
   findAll(user: UserEntity) {
     if (user.level == LEVEL.ADMIN) {
       return this.repo.find({
+        select: {
+          id: true,
+          name: true,
+          user: {
+            username: true
+          }
+        },
         order: {
           id: "DESC"
-        }
+        },
+        relations: {
+          user: true
+        },
       })      
     }
     return this.repo.find({
+      select: {
+        id: true,
+        name: true,
+        user: {
+          username: true
+        }
+      },
       where: {
         userId: user.id
+      },
+      relations: {
+        user: true
       },
       order: {
         id: "DESC"

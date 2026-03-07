@@ -1,5 +1,6 @@
 import { PageEntity } from 'src/modules/page/entities/page.entity';
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { UserEntity } from 'src/modules/user/entities/user.entity';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne, JoinColumn } from 'typeorm';
 
 @Entity('group_link')
 export class GroupEntity {
@@ -11,4 +12,8 @@ export class GroupEntity {
 
     @Column({ name: "user_id" })
     userId: number;
+
+    @ManyToOne(() => UserEntity, (user) => user.groups)
+    @JoinColumn({ name: 'user_id' })
+    user: UserEntity;
 }

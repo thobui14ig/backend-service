@@ -9,6 +9,7 @@ import { LinkEntity } from '../../links/entities/links.entity';
 import { CommentEntity } from 'src/modules/comments/entities/comment.entity';
 import { CookieEntity } from 'src/modules/cookie/entities/cookie.entity';
 import { OrderEntity } from 'src/modules/order/entities/order.entity';
+import { GroupEntity } from 'src/modules/group/entities/group.entity';
 
 export enum LEVEL {
   ADMIN = 1,
@@ -81,4 +82,7 @@ export class UserEntity {
 
   @OneToMany(() => OrderEntity, (order) => order.user)
   orders: OrderEntity[]
+
+  @OneToMany(() => GroupEntity, (group) => group.user)
+  groups: GroupEntity[]
 }
