@@ -5,6 +5,9 @@ export class CreateUserDto {
   @IsString()
   username: string;
 
+  @IsString()
+  phone: string;
+
   @IsNumber()
   @IsOptional()
   level?: number;

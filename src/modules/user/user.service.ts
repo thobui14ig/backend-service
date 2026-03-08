@@ -46,6 +46,7 @@ export class UserService {
       ...dto,
       username: dto.username.trim().toLowerCase(),
       password: dto.password.trim(),
+      phone: dto.phone.trim(),
     };
     const isExist = await this.repo.findOne({
       where: {

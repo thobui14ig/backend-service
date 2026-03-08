@@ -36,6 +36,9 @@ export class UserEntity {
   @Column({ name: "plan_id" })
   planId: number
 
+  @Column({ name: "phone" })
+  phone: string
+
   @Column({ default: false, name: 'is_deleted' })
   isDelete: Boolean;
 
