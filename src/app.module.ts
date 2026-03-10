@@ -38,6 +38,7 @@ import { GroupModule } from './modules/group/group.module';
 import { GroupEntity } from './modules/group/entities/group.entity';
 import { PageModule } from './modules/page/page.module';
 import { PageEntity } from './modules/page/entities/page.entity';
+import { NotificationModule } from './modules/notification/notification.module';
 
 @Module({
   imports: [
@@ -96,7 +97,8 @@ import { PageEntity } from './modules/page/entities/page.entity';
     GroupFacebookModule,
     PhoneCustomerModule,
     GroupModule,
-    PageModule
+    PageModule,
+    NotificationModule
   ],
   controllers: [AppController],
   providers: [
