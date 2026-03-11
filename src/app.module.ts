@@ -39,6 +39,7 @@ import { GroupEntity } from './modules/group/entities/group.entity';
 import { PageModule } from './modules/page/page.module';
 import { PageEntity } from './modules/page/entities/page.entity';
 import { NotificationModule } from './modules/notification/notification.module';
+import { TransactionModule } from './modules/transaction/transaction.module';
 
 @Module({
   imports: [
@@ -98,7 +99,8 @@ import { NotificationModule } from './modules/notification/notification.module';
     PhoneCustomerModule,
     GroupModule,
     PageModule,
-    NotificationModule
+    NotificationModule,
+    TransactionModule
   ],
   controllers: [AppController],
   providers: [
