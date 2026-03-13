@@ -19,7 +19,7 @@ export class TransactionService {
      return this.connection.query(`
         SELECT * 
         FROM transactions
-        ORDER BY id DESC;
+        ORDER BY created_at DESC;
     `)   
   }
 }
