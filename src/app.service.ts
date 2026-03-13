@@ -56,12 +56,28 @@ export class AppService {
                   'die', COUNT(*) FILTER (WHERE status = 'die')
               )
               FROM token
+          ),
+          'transaction', (
+                SELECT json_build_object(
+                'totalIncome', SUM(amount) FILTER (WHERE type = 'income'),
+                'totalExpense', SUM(amount) FILTER (WHERE type = 'expense'),
+                'currentMonthIncome', SUM(amount) FILTER (
+                    WHERE type = 'income'
+                    AND EXTRACT(MONTH FROM created_at) = 3
+                ),
+                'currentMonthExpense', SUM(amount) FILTER (
+                    WHERE type = 'expense'
+                    AND EXTRACT(MONTH FROM created_at) = 3
+                )
+            ) AS summary
+            FROM transactions
           )
       ) AS data;
     `)
     if (user.level === LEVEL.USER) {
         delete res[0].data.proxy
         delete res[0].data.token
+        delete res[0].data.transaction
     }
 
     return res[0].data
