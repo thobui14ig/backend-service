@@ -6,13 +6,15 @@ import { BuyVipDto, CreateOrderDto } from "./order.controller.i";
 import { LEVEL, UserEntity } from "../user/entities/user.entity";
 import { UserService } from "../user/user.service";
 import { getPlan } from "src/common/utils/plan";
+import { TransactionService } from "../transaction/transaction.service";
+import { CreateTransactionDto, TransactionType } from "../transaction/transaction.controller.i";
 
 @Injectable()
 export class OrderService {
   constructor(
     @InjectRepository(OrderEntity)
     private repo: Repository<OrderEntity>,
-    private userService: UserService,
+    private transactionService: TransactionService,
     private connection: DataSource
   ) {}
 
@@ -88,6 +90,13 @@ export class OrderService {
       await manager.update(OrderEntity, orderId, {
         status: 'confirmed',
       });
+      const transaction: CreateTransactionDto = {
+        type: TransactionType.INCOME,
+        note: `Nạp tiền từ ${user.username}`,
+        amount: order.amount
+      }
+      await this.transactionService.insert(transaction)
+
       return {
         message: 'Confirm order success',
         balance: user.balance,
