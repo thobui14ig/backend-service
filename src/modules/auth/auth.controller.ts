@@ -37,14 +37,14 @@ export class AuthController {
     return res.send(response);
   }
 
-  @Post('refresh-token')
-  async refreshToken(
-    @Body() body: { refreshToken: string },
-    @Req() request: Request,
-    @Res()
-    res: Response,
-  ) {
-    const sid = getSidFromRequest(request)
-    return this.authService.refreshToken(sid, res);
-  }
+  // @Post('refresh-token')
+  // async refreshToken(
+  //   @Body() body: { refreshToken: string },
+  //   @Req() request: Request,
+  //   @Res()
+  //   res: Response,
+  // ) {
+  //   const sid = getSidFromRequest(request)
+  //   return this.authService.refreshToken(sid, res);
+  // }
 }

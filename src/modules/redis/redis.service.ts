@@ -21,6 +21,10 @@ export class RedisService {
     return this.redis.set(key, JSON.stringify(value));
   }
 
+  async delete(key: string) {
+    return this.redis.del(key);
+  }
+
   async get(key: string) {
     return this.redis.get(key);
   }

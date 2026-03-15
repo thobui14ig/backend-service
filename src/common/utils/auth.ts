@@ -1,7 +1,7 @@
 import { Request } from "express";
 
   function getSidFromRequest(request: Request) {
-    const cookieString = (request.headers as any).cookie;
+    const cookieString = (request.headers as any).cookie??"";
     const sid = getValueByKeyInCookie(cookieString, 'sid');
     
     return sid

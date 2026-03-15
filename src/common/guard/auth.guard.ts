@@ -1,13 +1,15 @@
 import {
   CanActivate,
   ExecutionContext,
-  Injectable,
-  UnauthorizedException,
+  HttpException,
+  HttpStatus,
+  Injectable
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { IS_PUBLIC_KEY } from 'src/common/guard/guard';
 
+import { AuthService } from 'src/modules/auth/auth.service';
 import { RedisService } from 'src/modules/redis/redis.service';
 import { jwtConstants } from '../../modules/auth/auth.module';
 import { getSidFromRequest } from '../utils/auth';
@@ -17,7 +19,8 @@ export class AuthGuard implements CanActivate {
   constructor(
     private jwtService: JwtService, 
     private reflector: Reflector, 
-    private redisService: RedisService
+    private redisService: RedisService,
+    private authService: AuthService
   ) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -33,12 +36,12 @@ export class AuthGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const sid = getSidFromRequest(request)
     if (!sid) {
-      throw new UnauthorizedException();
+      throw new HttpException('Error', HttpStatus.PAYMENT_REQUIRED);
     }
     const dataToken = await this.redisService.get(sid)
 
     if (!dataToken) {
-      throw new UnauthorizedException();
+      throw new HttpException('Error', HttpStatus.PAYMENT_REQUIRED);
     }
 
     const tokenParse = JSON.parse(dataToken)
@@ -50,7 +53,7 @@ export class AuthGuard implements CanActivate {
       });
       request['user'] = payload;
     } catch (err) {
-      throw new UnauthorizedException();
+      await this.authService.refreshToken(sid)
     }
     return true;
   }

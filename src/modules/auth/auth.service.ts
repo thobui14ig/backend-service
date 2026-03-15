@@ -88,15 +88,12 @@ export class AuthService {
     };
   }
 
-  async refreshToken(sid: string, res: Response) {
+  async refreshToken(sid: string) {
     try {
-      if (!sid) {
-        throw new UnauthorizedException();
-      }
       const dataToken = await this.redisService.get(sid)
 
       if (!dataToken) {
-        throw new UnauthorizedException();
+        throw new HttpException('Error', HttpStatus.PAYMENT_REQUIRED);
       }
 
       const tokenParse = JSON.parse(dataToken)
@@ -105,17 +102,14 @@ export class AuthService {
       const refreshTokenExp = decodedToken.exp;
       const currentTime = Math.floor(Date.now() / 1000);
       if (currentTime > refreshTokenExp) {
-        return res.status(402).json({ refresh: false });
+        throw new HttpException('Error', HttpStatus.PAYMENT_REQUIRED);
       }
 
       const { iat, exp, ...payload } = decodedToken
       const token = await this.createToken(payload);
-
-      res.setHeader('Set-Cookie', [`sid=${sid}; HttpOnly; Path=/`]);
-
-      return res.send({ refreshToken: token.refreshToken });
+      await this.redisService.delete(sid)
+      await this.redisService.setJson(sid, token)
     } catch (error) {
-      return res.status(402).json({ message: 'Refresh token đã hết hạn' });
     }
   }
 }
