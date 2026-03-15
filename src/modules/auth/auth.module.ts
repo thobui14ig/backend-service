@@ -3,6 +3,7 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { UserModule } from '../user/user.module';
+import { RedisModule } from '../redis/redis.module';
 
 export const jwtConstants = {
   secret:
@@ -17,6 +18,7 @@ export const jwtConstants = {
       secret: jwtConstants.secret,
       // signOptions: { expiresIn: 24 * 60 * 60 },
     }),
+    RedisModule
   ],
   controllers: [AuthController],
   providers: [AuthService],

@@ -2,8 +2,10 @@ import { HttpException, HttpStatus, Injectable, UnauthorizedException } from '@n
 import { JwtService } from '@nestjs/jwt';
 import * as dayjs from 'dayjs';
 import { Response } from 'express';
-import { LEVEL, UserEntity } from '../user/entities/user.entity';
+import { v4 as uuidv4 } from 'uuid';
+import { UserEntity } from '../user/entities/user.entity';
 import { UserService } from '../user/user.service';
+import { RedisService } from '../redis/redis.service';
 
 interface IUserFail {
   username: string,
@@ -16,6 +18,7 @@ export class AuthService {
   constructor(
     private usersService: UserService,
     private jwtService: JwtService,
+    private redisService: RedisService,
   ) { }
 
   async signIn(username: string, pass: string) {
@@ -61,9 +64,13 @@ export class AuthService {
     }
 
     const payload = { ...user };
+    const token = await this.createToken(payload)
+    const sid = uuidv4(); 
+    await this.redisService.setJson(sid, token)
 
     return {
-      token: await this.createToken(payload),
+      token,
+      sid,
       info: {
         ...user
       }
@@ -81,8 +88,19 @@ export class AuthService {
     };
   }
 
-  async refreshToken(refresh_token: string, res: Response) {
+  async refreshToken(sid: string, res: Response) {
     try {
+      if (!sid) {
+        throw new UnauthorizedException();
+      }
+      const dataToken = await this.redisService.get(sid)
+
+      if (!dataToken) {
+        throw new UnauthorizedException();
+      }
+
+      const tokenParse = JSON.parse(dataToken)
+      const refresh_token = tokenParse.refreshToken
       const decodedToken = this.jwtService.verify(refresh_token);
       const refreshTokenExp = decodedToken.exp;
       const currentTime = Math.floor(Date.now() / 1000);
@@ -91,11 +109,11 @@ export class AuthService {
       }
 
       const { iat, exp, ...payload } = decodedToken
-      const { accessToken, refreshToken } = await this.createToken(payload);
+      const token = await this.createToken(payload);
 
-      res.setHeader('Set-Cookie', [`token=${accessToken}; HttpOnly; Path=/`]);
+      res.setHeader('Set-Cookie', [`sid=${sid}; HttpOnly; Path=/`]);
 
-      return res.send({ refreshToken });
+      return res.send({ refreshToken: token.refreshToken });
     } catch (error) {
       return res.status(402).json({ message: 'Refresh token đã hết hạn' });
     }

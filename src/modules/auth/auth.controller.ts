@@ -4,13 +4,15 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  Req,
   Res
 } from '@nestjs/common';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 
 import { Public } from 'src/common/guard/guard';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { getSidFromRequest } from 'src/common/utils/auth';
 
 @Controller('auth')
 @Public()
@@ -29,18 +31,20 @@ export class AuthController {
       signInDto.password,
     );
 
-    res.setHeader('Set-Cookie', [`token=${response.token.accessToken}; HttpOnly; Path=/`]);
+    res.setHeader('Set-Cookie', [`HttpOnly; Path=/`, `sid=${response.sid}; HttpOnly; Path=/`]);
 
+    delete response.token;
     return res.send(response);
   }
 
   @Post('refresh-token')
   async refreshToken(
     @Body() body: { refreshToken: string },
+    @Req() request: Request,
     @Res()
     res: Response,
   ) {
-    const { refreshToken } = body;
-    return this.authService.refreshToken(refreshToken, res);
+    const sid = getSidFromRequest(request)
+    return this.authService.refreshToken(sid, res);
   }
 }

@@ -1,18 +1,24 @@
 import {
-  Injectable,
   CanActivate,
   ExecutionContext,
+  Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
-import { jwtConstants } from '../../modules/auth/auth.module';
-import { Request } from 'express';
 import { IS_PUBLIC_KEY } from 'src/common/guard/guard';
+
+import { RedisService } from 'src/modules/redis/redis.service';
+import { jwtConstants } from '../../modules/auth/auth.module';
+import { getSidFromRequest } from '../utils/auth';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private jwtService: JwtService, private reflector: Reflector) { }
+  constructor(
+    private jwtService: JwtService, 
+    private reflector: Reflector, 
+    private redisService: RedisService
+  ) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
@@ -25,12 +31,20 @@ export class AuthGuard implements CanActivate {
 
 
     const request = context.switchToHttp().getRequest();
-    const token = this.extractTokenFromHeader(request);
-
-    if (!token) {
+    const sid = getSidFromRequest(request)
+    if (!sid) {
       throw new UnauthorizedException();
     }
+    const dataToken = await this.redisService.get(sid)
+
+    if (!dataToken) {
+      throw new UnauthorizedException();
+    }
+
+    const tokenParse = JSON.parse(dataToken)
+
     try {
+      const token = tokenParse.accessToken
       const { iat, exp, ...payload } = await this.jwtService.verifyAsync(token, {
         secret: jwtConstants.secret,
       });
@@ -39,34 +53,5 @@ export class AuthGuard implements CanActivate {
       throw new UnauthorizedException();
     }
     return true;
-  }
-
-  private extractTokenFromHeader(request: Request): string | undefined {
-    const cookieString = request.headers.cookie;
-    if (cookieString) {
-      const cookieToken = this.getValueByKeyInCookie(cookieString, 'token');
-
-      if (cookieToken) {
-        return cookieToken;
-      }
-    }
-
-    const [type, token] = request.headers['authorization']?.split(' ') ?? [];
-    return type === 'Bearer' ? token : undefined;
-  }
-
-  private getValueByKeyInCookie(cookieString: string, key: string) {
-    const valueCookie = cookieString
-      .split(';')
-      .map((cookie) => cookie.trim())
-      .find((cookie) => cookie.startsWith(`${key}=`));
-
-    let tokenValue: string | undefined;
-    if (valueCookie) {
-      const [, value] = valueCookie.split('=');
-      tokenValue = value;
-    }
-
-    return tokenValue;
   }
 }
