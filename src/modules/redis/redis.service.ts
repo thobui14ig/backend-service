@@ -7,16 +7,6 @@ import Redis from 'ioredis';
 export class RedisService {
   constructor(@InjectRedis() private readonly redis: Redis) {}
 
-  async SLAVEOF() {
-    await this.redis.call('SLAVEOF', ['NO', 'ONE']);
-
-    return this.clearAll();
-  }
-
-  async clearAll() {
-    await this.redis.flushall();
-  }
-
   async setJson(key: string, value: any): Promise<'OK'> {
     return this.redis.set(key, JSON.stringify(value));
   }
