@@ -31,7 +31,9 @@ export class AuthController {
       signInDto.password,
     );
 
-    res.setHeader('Set-Cookie', [`HttpOnly; Path=/`, `sid=${response.sid}; HttpOnly; Path=/`]);
+    res.setHeader('Set-Cookie', [
+      `sid=${response.sid}; HttpOnly; Path=/; Max-Age=${60 * 60 * 24 * 365 * 10}`
+    ]);
 
     delete response.token;
     return res.send(response);
