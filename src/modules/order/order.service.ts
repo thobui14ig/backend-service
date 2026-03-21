@@ -15,6 +15,7 @@ export class OrderService {
     @InjectRepository(OrderEntity)
     private repo: Repository<OrderEntity>,
     private transactionService: TransactionService,
+    private userService: UserService,
     private connection: DataSource
   ) {}
 
@@ -125,6 +126,7 @@ export class OrderService {
       if (user.balance < planInfo.price) {
         throw new BadRequestException('Bạn không đủ tiền!'); 
       } 
+      await this.userService.update({ ...user, isActive: true } as any)
 
       await manager
         .createQueryBuilder()
