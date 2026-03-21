@@ -1,13 +1,17 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { OrderEntity } from "./entities/order.entity";
-import { DataSource, Repository } from "typeorm";
-import { BuyVipDto, CreateOrderDto } from "./order.controller.i";
-import { LEVEL, UserEntity } from "../user/entities/user.entity";
-import { UserService } from "../user/user.service";
 import { getPlan } from "src/common/utils/plan";
-import { TransactionService } from "../transaction/transaction.service";
+import { DataSource, Repository } from "typeorm";
 import { CreateTransactionDto, TransactionType } from "../transaction/transaction.controller.i";
+import { TransactionService } from "../transaction/transaction.service";
+import { LEVEL, UserEntity } from "../user/entities/user.entity";
+import { OrderEntity } from "./entities/order.entity";
+import { BuyVipDto, CreateOrderDto } from "./order.controller.i";
+import * as dayjs from 'dayjs';
+import * as timezone from 'dayjs/plugin/timezone';
+import * as utc from 'dayjs/plugin/utc';
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 @Injectable()
 export class OrderService {
@@ -15,7 +19,6 @@ export class OrderService {
     @InjectRepository(OrderEntity)
     private repo: Repository<OrderEntity>,
     private transactionService: TransactionService,
-    private userService: UserService,
     private connection: DataSource
   ) {}
 
@@ -126,14 +129,16 @@ export class OrderService {
       if (user.balance < planInfo.price) {
         throw new BadRequestException('Bạn không đủ tiền!'); 
       } 
-      await this.userService.update({ ...user, isActive: true } as any)
+      // await this.userService.update({ ...user, isActive: true } as any)
 
       await manager
         .createQueryBuilder()
         .update(UserEntity)
         .set({
           balance: () => `"balance" - ${Number(planInfo.price)}`,
-          planId
+          planId,
+          isActive: true,
+          expiredAt: dayjs().utc().add(30, 'day').format('YYYY-MM-DD HH:mm:ss')
         })
         .where('id = :id', { id: user.id })
         .execute();  
