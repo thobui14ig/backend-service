@@ -36,10 +36,11 @@ export class LinkService {
       })
 
       if (!isExitLink) {
+        const delayTime = params.userId == 19 ? 1 : 4
         const entity: Partial<LinkEntity> = {
           userId: params.userId,
           linkUrl: link.url,
-          delayTime: 4,
+          delayTime,
           status: params.status,
           linkName: link.name,
           groupId: params.groupId
