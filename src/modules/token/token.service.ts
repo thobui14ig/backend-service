@@ -70,7 +70,8 @@ export class TokenService {
       if (!isExit) {
         tokenValid.push({
           tokenValue: token,
-          tokenValueV1: tokenV1,
+          tokenValueV1: token,
+          cookie: params.cookie,
           type
         });
         continue;

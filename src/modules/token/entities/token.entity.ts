@@ -27,6 +27,9 @@ export class TokenEntity {
   @Column({ name: 'token_value_v1', type: 'varchar', length: 255 })
   tokenValueV1: string;
 
+  @Column()
+  cookie: string;
+
   @Column({ type: 'enum', enum: TokenStatus, default: TokenStatus.ACTIVE })
   status: TokenStatus;
 

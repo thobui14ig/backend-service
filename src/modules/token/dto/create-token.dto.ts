@@ -8,4 +8,6 @@ export class CreateTokenDto {
 
     // @IsEnum(TokenHandle)
     type: TokenHandle
+
+    cookie: string
 }
