@@ -9,4 +9,5 @@ export interface IGetCommentParams {
     groupId?: number | null
     pageId?: number | null
     timezone: string
+    isExport: boolean
 }
