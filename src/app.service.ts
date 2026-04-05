@@ -58,16 +58,18 @@ export class AppService {
               FROM token
           ),
           'transaction', (
-                SELECT json_build_object(
+            SELECT json_build_object(
                 'totalIncome', SUM(amount) FILTER (WHERE type = 'income'),
                 'totalExpense', SUM(amount) FILTER (WHERE type = 'expense'),
                 'currentMonthIncome', SUM(amount) FILTER (
                     WHERE type = 'income'
-                    AND EXTRACT(MONTH FROM created_at) = 3
+                    AND EXTRACT(MONTH FROM created_at) = EXTRACT(MONTH FROM CURRENT_DATE)
+                    AND EXTRACT(YEAR FROM created_at) = EXTRACT(YEAR FROM CURRENT_DATE)
                 ),
                 'currentMonthExpense', SUM(amount) FILTER (
                     WHERE type = 'expense'
-                    AND EXTRACT(MONTH FROM created_at) = 3
+                    AND EXTRACT(MONTH FROM created_at) = EXTRACT(MONTH FROM CURRENT_DATE)
+                    AND EXTRACT(YEAR FROM created_at) = EXTRACT(YEAR FROM CURRENT_DATE)
                 )
             ) AS summary
             FROM transactions
