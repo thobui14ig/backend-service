@@ -19,7 +19,6 @@ export class CommentsService {
     private readonly connection: DataSource,
   ) { }
   async findAll(user: UserEntity, params: IGetCommentParams) {
-    console.log(222, params)
     const vnNowStart = dayjs(params.startDate).tz(params.timezone)
     const vnNowEnd = dayjs(params.endDate).tz(params.timezone)
     const startDate = vnNowStart.startOf('day').utc().format('YYYY-MM-DD HH:mm:ss');
