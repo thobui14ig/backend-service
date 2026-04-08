@@ -2,7 +2,7 @@ import { Body, Controller, Get, Param, Post, Req } from '@nestjs/common';
 import { AppService } from './app.service';
 import { Request } from 'express';
 import { getUser } from './common/utils/user';
-import { DashboardStats, UserSupportDto } from './app.controller.i';
+import { DashboardStats, RequestSong } from './app.controller.i';
 import { Public } from './common/guard/guard';
 
 @Controller()
@@ -28,7 +28,7 @@ export class AppController {
 
   @Public()
   @Post('/insert-user-support')
-  insertUserSupport(@Body() body: UserSupportDto) {
+  insertUserSupport(@Body() body: RequestSong) {
     return this.appService.insertUserSupport(body)
   }
 
@@ -43,4 +43,5 @@ export class AppController {
   updateExportLink(@Body() dto: { cmtIds: number[], linkId: number }) {
     return this.appService.updateExportLink(dto.linkId, dto.cmtIds)
   }
+  //buithanhthuan
 }
