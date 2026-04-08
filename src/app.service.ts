@@ -87,9 +87,28 @@ export class AppService {
 
   getUserSupport() {
     return this.connection.query(`
-        SELECT id, name, content, amount
-        FROM user_support
-        ORDER BY created_at DESC;       
+        SELECT 
+        id,
+        name,
+        phone,
+        song,
+        content,
+        type,
+        amount::numeric as amount,  -- Chuyển string → number
+        CASE 
+            WHEN type = 'birthday' THEN birthday_date 
+            ELSE NULL 
+        END as "birthdayDate",
+        CASE 
+            WHEN type = 'livestream' THEN livestream_date 
+            ELSE NULL 
+        END as "livestreamDate",
+        livestream_time as "livestreamTime",
+        status,
+        created_at as "createdAt"
+        FROM song_requests 
+        ORDER BY created_at DESC 
+        LIMIT 100;
     `)
   }
 
