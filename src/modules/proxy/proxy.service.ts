@@ -34,6 +34,7 @@ export class ProxyService {
       if (!isExit) {
         proxiesValid.push({
           proxyAddress: proxy,
+          type: params.type
         });
         continue;
       }

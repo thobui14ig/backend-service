@@ -5,6 +5,12 @@ export enum ProxyStatus {
     IN_ACTIVE = 'inactive'
 }
 
+export enum ProxyType {
+  GET_CMT = 1,
+  GET_INFO = 2,
+  GET_PAGE = 3
+}
+
 @Entity('proxy')
 export class ProxyEntity {
     @PrimaryGeneratedColumn()
@@ -18,4 +24,7 @@ export class ProxyEntity {
 
     @Column({ default: false, name: "is_fb_block" })
     isFbBlock: Boolean;
+
+    @Column({ name: "type" })
+    type: ProxyType
 }
