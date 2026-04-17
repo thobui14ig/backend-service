@@ -58,7 +58,11 @@ export class VpsService {
 
 
     async getAll() {
-        return await this.repo.find()
+        return await this.repo.find({
+            order: {
+                id: "ASC"
+            }
+        })
     }
 
     remove(id: number) {
