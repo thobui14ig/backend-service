@@ -87,7 +87,8 @@ export class UserService {
         'user.balance',
         'user.planId',
         'user.expiredAt',
-        'user.isActive'
+        'user.isActive',
+        'user.isGetPhone'
       ])
       .loadRelationCountAndMap('user.totalLink', 'user.links')
       .getMany();

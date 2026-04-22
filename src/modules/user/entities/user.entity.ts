@@ -74,6 +74,9 @@ export class UserEntity {
   @Column({ default: 0, name: 'type_config' })
   typeConfig: number
 
+  @Column({ default: false, name: 'is_get_phone' })
+  isGetPhone: Boolean;
+
   @OneToMany(() => LinkEntity, (link) => link.user)
   links: LinkEntity[]
 
