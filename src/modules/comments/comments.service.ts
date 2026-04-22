@@ -20,6 +20,7 @@ export class CommentsService {
   ) { }
   async findAll(user: UserEntity, params: IGetCommentParams) {
     const isExport = params.isExport ?? false
+    const isGetPhone = params.hasPhone ?? false
     const vnNowStart = dayjs(params.startDate).tz(params.timezone)
     const vnNowEnd = dayjs(params.endDate).tz(params.timezone)
     const startDate = vnNowStart.startOf('day').utc().format('YYYY-MM-DD HH:mm:ss');
@@ -37,6 +38,10 @@ export class CommentsService {
 
     if (params.pageId) {
       condition += ` l.page_id = '${params.pageId}' AND `
+    }
+
+    if (isGetPhone) {
+      condition += ` c.phone_number IS NOT NULL AND `
     }
     const query = `
       SELECT 

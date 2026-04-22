@@ -10,4 +10,5 @@ export interface IGetCommentParams {
     pageId?: number | null
     timezone: string
     isExport: boolean
+    hasPhone?: boolean
 }
