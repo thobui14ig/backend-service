@@ -163,7 +163,8 @@ export class LinkService {
             l.group_id,
             l.content,
             p.name,
-            g.name
+            g.name,
+            ga.name
       )
       SELECT *, (SELECT COUNT(*) FROM filtered_links) AS "totalCount"
       FROM filtered_links
