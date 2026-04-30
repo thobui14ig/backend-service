@@ -126,6 +126,7 @@ export class LinkService {
               l.content,
               p.name as "pageName",
               g.name as "groupName",
+              ga.name as "groupAutoName",
               COUNT(c.id) AS "totalComment",
               COUNT(c.id) FILTER (
                 WHERE c.created_at >= '${startDate}'
@@ -139,6 +140,7 @@ export class LinkService {
           LEFT JOIN comments c ON c.link_id = l.id
           LEFT JOIN page p ON p.page_id = l.page_id
           LEFT JOIN group_link g ON l.group_id = g.id
+          LEFT JOIN group_auto ga ON l.group_auto_id = ga.id
           WHERE l.is_deleted = false and l.is_link_group = false ${queryEntends}
         ${keyword ? `AND (
             l.post_id::text ~* '${keyword}'
