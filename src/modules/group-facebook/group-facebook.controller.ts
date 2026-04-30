@@ -1,23 +1,24 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Req } from '@nestjs/common';
 import { CreateGroupFacebookDto } from './dto/create-group-facebook.dto';
 import { UpdateGroupFacebookDto } from './dto/update-group-facebook.dto';
-import { IGetProxy } from './group-facebook.controller.i';
 import { GroupFacebooService } from './group-facebook.service';
-import { Role, Roles } from 'src/common/decorators/roles.decorator';
+import { getUser } from 'src/common/utils/user';
+import { Request } from 'express';
 
-@Roles(Role.ADMIN)
 @Controller('group-facebook')
 export class GroupFacebookController {
   constructor(private readonly groupFacebooService: GroupFacebooService) { }
 
   @Post()
-  create(@Body() dto: CreateGroupFacebookDto) {
-    return this.groupFacebooService.create(dto);
+  create(@Body() dto: CreateGroupFacebookDto, @Req() req: Request) {
+    const user = getUser(req);
+    return this.groupFacebooService.create(dto, user.id);
   }
 
   @Get()
-  findAll() {
-    return this.groupFacebooService.findAll();
+  findAll(@Req() req: Request) {
+    const user = getUser(req);
+    return this.groupFacebooService.findAll(user.id, user.level);
   }
 
   @Get(':id')

@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { GroupFacebookEntity } from './entities/group-facebook.entity';
 import { CreateGroupFacebookDto } from './dto/create-group-facebook.dto';
 import { UpdateGroupFacebookDto } from './dto/update-group-facebook.dto';
+import { LEVEL } from '../user/entities/user.entity';
 
 @Injectable()
 export class GroupFacebooService {
@@ -12,12 +13,26 @@ export class GroupFacebooService {
     private repo: Repository<GroupFacebookEntity>,
   ) { }
 
-  async create(params: CreateGroupFacebookDto) {
-    return this.repo.save(params)
+  async create(params: CreateGroupFacebookDto, userId: number) {
+    return this.repo.save({ ...params, userId })
   }
 
-  findAll() {
-    return this.repo.find()
+  findAll(userId: number, level: LEVEL) {
+    if (level === LEVEL.ADMIN) {
+      return this.repo.find({
+        order: {
+          id: 'DESC'
+        }
+      })
+    }
+    return this.repo.find({
+      where: {
+        userId
+      },
+      order: {
+        id: 'DESC'
+      }
+    })
   }
 
   findOne(id: number) {

@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
-@Entity('groups')
+@Entity('group_auto')
 export class GroupFacebookEntity {
     @PrimaryGeneratedColumn()
     id: number;
@@ -10,4 +10,7 @@ export class GroupFacebookEntity {
 
     @Column({ name: "group_id" })
     groupId: string;
+
+    @Column({ name: "user_id" })
+    userId: number;
 }
