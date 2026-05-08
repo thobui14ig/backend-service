@@ -1,22 +1,44 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { ForbiddenException, HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { LEVEL, UserEntity } from '../user/entities/user.entity';
 import { UpdatePageDto } from './dto/update-page.dto';
 import { PageEntity } from './entities/page.entity';
 import { CreatePageDto } from './dto/create-page.dto';
+import { UserService } from '../user/user.service';
+import { getPlan } from 'src/common/utils/plan';
 
 @Injectable()
 export class PageService {
   constructor(
     @InjectRepository(PageEntity)
     private repo: Repository<PageEntity>,
+    private userService: UserService,
     private connection: DataSource,
   ) { }
 
   async create(params: CreatePageDto, userId: number) {
     const arg = { ...params, userId }
+    const totalPage = await this.getTotalPage(userId)
+    const user = await this.userService.getInfo(userId)
+    const plan = getPlan(user.planId, user.id)
+
+    if (totalPage >= plan.maxPage) {
+      throw new HttpException(
+          `Vip${plan.id} chỉ được thêm tối đa ${plan.maxPage} page`,
+          HttpStatus.BAD_REQUEST,
+      );      
+    }
+    
     return this.repo.save(arg)
+  }
+
+  getTotalPage(userId: number) {
+    return this.repo.count({
+      where: {
+        userId,
+      },
+    });
   }
 
   findAll(user: UserEntity) {
