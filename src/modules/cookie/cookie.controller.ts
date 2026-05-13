@@ -7,7 +7,7 @@ import { Request } from 'express';
 import { Role, Roles } from 'src/common/decorators/roles.decorator';
 
 @Controller('cookies')
-@Roles(Role.ADMIN)
+// @Roles(Role.ADMIN)
 export class CookieController {
   constructor(private readonly cookieService: CookieService) { }
 

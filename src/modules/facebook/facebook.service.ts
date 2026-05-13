@@ -175,10 +175,10 @@ export class FacebookService {
   @OnEvent('gen-token-user')
   async genTokenByCookieUser(payload: CookieEntity) {
     const { cookie } = payload
-    const profile = await this.getDataProfileFb(cookie, TokenType.EAAAAAY);
     const { facebookId, fbDtsg, jazoest } = await this.getInfoAccountsByCookie(cookie) || {}
+    
     console.log(`🚀 ~ FacebookService ~ genTokenByCookieUser ~ { facebookId, fbDtsg, jazoest }:`, { facebookId, fbDtsg, jazoest })
-    payload.token = profile?.accessToken
+    // payload.token = profile?.accessToken
     payload.fbId = facebookId
     payload.fbDtsg = fbDtsg
     payload.jazoest = jazoest

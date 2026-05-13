@@ -45,19 +45,6 @@ export class TokenService {
 
     for (const item of params.tokens) {
       let token = item;
-      let tokenV1 = null;
-
-      if (item.includes('c_user')) {
-        const profileEAADo1 = await this.facebookService.getDataProfileFb(token, TokenType.EAADo1);
-        const profileEAAAAAY = await this.facebookService.getDataProfileFb(token, TokenType.EAAAAAY);
-
-        if (!profileEAADo1.accessToken || !profileEAAAAAY.accessToken) {
-          tokenInValid.push(token);
-          continue;
-        }
-        token = profileEAADo1.accessToken;
-        tokenV1 = profileEAAAAAY.accessToken
-      }
 
       const isExit = (await this.repo.findOne({
         where: {

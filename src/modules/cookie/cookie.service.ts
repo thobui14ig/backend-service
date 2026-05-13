@@ -25,6 +25,7 @@ export class CookieService {
         pageId: params.pageId
       }
     })
+   
     await this.repo.save(cookies)
     if (level === LEVEL.USER) {
       cookies.forEach((cookie) => {
