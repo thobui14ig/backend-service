@@ -52,7 +52,7 @@ export enum LivestreamTime {
 export class RequestSong {
   @IsString()
   @IsNotEmpty({ message: 'Tên là bắt buộc' })
-  name: string;
+  full_name: string;
 
   @IsString()
   @Matches(/^(0[3|5|7|8|9])+([0-9]{8})\b$/, { 
@@ -60,32 +60,8 @@ export class RequestSong {
   })
   phone: string;
 
-  @IsString()
-  @IsNotEmpty({ message: 'Tên bài hát là bắt buộc' })
-  song: string;
 
   @IsString()
-  @IsNotEmpty({ message: 'Nội dung yêu cầu là bắt buộc' })
-  content: string;
-
-  @IsEnum(RequestType, { message: 'Type phải là birthday hoặc livestream' })
-  type: RequestType;
-
-  @IsOptional()
-  @IsNumber({}, { message: 'Số tiền phải là số' })
-  @Min(0, { message: 'Số tiền >= 0' })
-  @Type(() => Number)
-  amount?: number;
-
-  @IsOptional()
-  @IsDateString({ strict: true }, { message: 'Ngày sinh nhật không hợp lệ (YYYY-MM-DD)' })
-  birthdayDate?: string;
-
-  @IsOptional()
-  @IsDateString({ strict: true }, { message: 'Ngày livestream không hợp lệ (YYYY-MM-DD)' })
-  livestreamDate?: string;
-
-  @IsOptional()
-  @IsEnum(LivestreamTime, { message: 'Giờ phải là 20:00, 20:15, ... 22:00' })
-  livestreamTime?: LivestreamTime;
+  @IsNotEmpty({ message: 'Địa chỉ là bắt buộc' })
+  address: string;
 }

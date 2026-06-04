@@ -113,25 +113,12 @@ export class AppService {
   }
 
 async insertUserSupport(dto: RequestSong): Promise<any> {
-    const { name, phone, song, content, type, amount, birthdayDate, livestreamDate, livestreamTime } = dto;
-    const baseParams = [name, phone, song, content, type, amount || 0];
-    let query = 'INSERT INTO song_requests (name, phone, song, content, type, amount';
-    let paramIndex = 7;
+    const { full_name, phone, address } = dto;
 
-    if (type === 'birthday') {
-      query += ', birthday_date';
-      baseParams.push(birthdayDate!);
-    } else if (type === 'livestream') {
-      query += ', livestream_date, livestream_time';
-      baseParams.push(livestreamDate!, livestreamTime!);
-    }
-
-    query += ') VALUES ($1,$2,$3,$4,$5,$6' + 
-             (type === 'birthday' ? ', $7' : 
-              type === 'livestream' ? ', $7, $8' : '') + 
-             ') RETURNING *';
-
-    return await this.connection.query(query, baseParams);
+    return await this.connection.query(`
+        INSERT INTO buyers (full_name, phone, address)
+        VALUES ('${full_name}', '${phone}', '${address}') 
+    `);
   }
 
   async getConfig(userId: number) {
