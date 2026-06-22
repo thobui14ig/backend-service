@@ -4,9 +4,9 @@ export function getPlan(planId: number, userId: number | null = null): { id: num
   const base = SUBSCRIPTION_PLANS_MASTER[`VIP_${planId}`];
 
   const res = structuredClone(base);
-    if (userId === 4) {
-        res.maxLinks = 450
-    }
+    // if (userId === 4) {
+    //     res.maxLinks = 450
+    // }
 
     return res
 }
