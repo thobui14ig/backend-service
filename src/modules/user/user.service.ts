@@ -91,6 +91,8 @@ export class UserService {
         'user.isGetPhone'
       ])
       .loadRelationCountAndMap('user.totalLink', 'user.links')
+      .andWhere("user.username != :name", { name: "test" })
+      .orderBy("id", "ASC")
       .getMany();
   }
 
