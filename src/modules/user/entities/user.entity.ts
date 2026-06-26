@@ -42,6 +42,9 @@ export class UserEntity {
   @Column({ default: false, name: 'is_deleted' })
   isDelete: Boolean;
 
+  @Column({ name: 'total_link' })
+  totalLink: number;
+
   @CreateDateColumn({ name: 'created_at', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 

@@ -137,6 +137,7 @@ export class OrderService {
         .set({
           balance: () => `"balance" - ${Number(planInfo.price)}`,
           planId,
+          totalLink: planInfo.maxLinks,
           isActive: true,
           expiredAt: dayjs().utc().add(30, 'day').format('YYYY-MM-DD HH:mm:ss')
         })
