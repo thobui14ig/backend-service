@@ -142,7 +142,7 @@ export class LinkService {
           FROM links l
           JOIN users u ON u.id = l.user_id
           LEFT JOIN comments c ON c.link_id = l.id
-          LEFT JOIN page p ON p.page_id = l.page_id
+          LEFT JOIN page p ON p.page_id = l.page_id and l.user_id=p.user_id
           LEFT JOIN group_link g ON l.group_id = g.id
           LEFT JOIN group_auto ga ON l.group_auto_id = ga.id
           WHERE l.is_deleted = false and l.is_link_group = false ${queryEntends}
