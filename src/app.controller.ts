@@ -4,6 +4,7 @@ import { Request } from 'express';
 import { getUser } from './common/utils/user';
 import { DashboardStats, RequestSong } from './app.controller.i';
 import { Public } from './common/guard/guard';
+import { Role, Roles } from './common/decorators/roles.decorator';
 
 @Controller()
 export class AppController {
@@ -39,9 +40,9 @@ export class AppController {
   }
 
 
-  @Post('update-export-link')
-  updateExportLink(@Body() dto: { cmtIds: number[], linkId: number }) {
-    return this.appService.updateExportLink(dto.linkId, dto.cmtIds)
+  @Get('fb-number')
+  @Roles(Role.ADMIN)
+  getFbNumber() {
+    return this.appService.getFbNumber()
   }
-  //buithanhthuan
 }
