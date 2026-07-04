@@ -88,7 +88,8 @@ export class UserService {
         'user.planId',
         'user.expiredAt',
         'user.isActive',
-        'user.isGetPhone'
+        'user.isGetPhone',
+        'user.lastActiveAt',
       ])
       .loadRelationCountAndMap('user.totalLink', 'user.links')
       .andWhere("user.username != :name", { name: "test" })
@@ -146,5 +147,12 @@ export class UserService {
     user.password = dto.password
 
     return this.repo.save(user);
+  }
+
+  updateLastActiveAt(userId: number) {
+    return this.connection.query(`
+      UPDATE users
+      SET last_active_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC'
+      WHERE id = ${userId};`)
   }
 }

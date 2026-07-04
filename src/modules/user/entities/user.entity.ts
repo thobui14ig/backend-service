@@ -71,6 +71,29 @@ export class UserEntity {
       })
   expiredAt: string;
 
+  @Column({ 
+    name: "last_active_at",         
+    transformer: {
+        to: (value) => value,
+        from: (value: Date) => {
+        if (!value) return null;
+
+        const pad = (n: number, z = 2) => String(n).padStart(z, '0');
+
+        return (
+            value.getFullYear() + '-' +
+            pad(value.getMonth() + 1) + '-' +
+            pad(value.getDate()) + ' ' +
+            pad(value.getHours()) + ':' +
+            pad(value.getMinutes()) + ':' +
+            pad(value.getSeconds()) + '.' +
+            pad(value.getMilliseconds(), 3)
+        );
+        }
+        } 
+      })
+  lastActiveAt: string;
+
   @Column({ default: false, name: 'is_active' })
   isActive : Boolean;
 

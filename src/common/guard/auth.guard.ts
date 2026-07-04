@@ -13,6 +13,7 @@ import { AuthService } from 'src/modules/auth/auth.service';
 import { RedisService } from 'src/modules/redis/redis.service';
 import { jwtConstants } from '../../modules/auth/auth.module';
 import { getSidFromRequest } from '../utils/auth';
+import { UserService } from 'src/modules/user/user.service';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -20,7 +21,8 @@ export class AuthGuard implements CanActivate {
     private jwtService: JwtService, 
     private reflector: Reflector, 
     private redisService: RedisService,
-    private authService: AuthService
+    private authService: AuthService,
+    private userService: UserService
   ) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -51,7 +53,9 @@ export class AuthGuard implements CanActivate {
       const { iat, exp, ...payload } = await this.jwtService.verifyAsync(token, {
         secret: jwtConstants.secret,
       });
+      
       request['user'] = payload;
+      return await this.userService.updateLastActiveAt(payload.id)
     } catch (err) {
       await this.authService.refreshToken(sid)
     }

@@ -40,6 +40,7 @@ import { PageModule } from './modules/page/page.module';
 import { PageEntity } from './modules/page/entities/page.entity';
 import { NotificationModule } from './modules/notification/notification.module';
 import { TransactionModule } from './modules/transaction/transaction.module';
+import { UserModule } from './modules/user/user.module';
 
 @Module({
   imports: [
@@ -100,11 +101,11 @@ import { TransactionModule } from './modules/transaction/transaction.module';
     GroupModule,
     PageModule,
     NotificationModule,
-    TransactionModule
+    TransactionModule,
+    UserModule,
   ],
   controllers: [AppController],
   providers: [
-    AppService,
     AppService,
     {
       provide: APP_GUARD,
