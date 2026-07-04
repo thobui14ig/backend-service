@@ -65,16 +65,14 @@ export class CommentsService {
           ON l.id = c.link_id and l.is_deleted = false and l.is_link_group = false
       WHERE 
         ${condition}
-        ${startDate && endDate ?  `c.created_at BETWEEN '${startDate}' AND '${endDate}'` : ""}
-        ${keyword ? `AND ` : ""}
-        
-          ${keyword ? `(
+        ${startDate && endDate ?  `c.created_at BETWEEN '${startDate}' AND '${endDate}' AND` : ""}
+        ${keyword ? `(
             c.message::text ~* '${keyword}' 
             OR c.post_id::text ~* '${keyword}'
             OR c.user_uid::text ~* '${keyword}'
             OR c.username::text ~* '${keyword}'
             OR c.phone_number::text ~* '${keyword}'
-          )` : ""}
+          )` : "1=1"}
       ORDER BY c.created_at ${isExport ? "ASC" : "DESC"}
       LIMIT ${limit} OFFSET ${offset};
     `
