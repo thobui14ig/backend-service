@@ -23,8 +23,8 @@ export class CommentsService {
     const isGetPhone = params.hasPhone ?? false
     const vnNowStart = dayjs(params.startDate).tz(params.timezone)
     const vnNowEnd = dayjs(params.endDate).tz(params.timezone)
-    const startDate = vnNowStart.startOf('day').utc().format('YYYY-MM-DD HH:mm:ss');
-    const endDate = vnNowEnd.endOf('day').utc().format('YYYY-MM-DD HH:mm:ss');
+    const startDate = params.startDate ? vnNowStart.startOf('day').utc().format('YYYY-MM-DD HH:mm:ss') : null
+    const endDate = params.endDate ? vnNowEnd.endOf('day').utc().format('YYYY-MM-DD HH:mm:ss') : null
     const keyword = params?.keyword?.length > 0 ? params?.keyword?.trim() : null
 
     let response = []
@@ -67,7 +67,7 @@ export class CommentsService {
         ${condition}
         ${startDate && endDate ?  `c.created_at BETWEEN '${startDate}' AND '${endDate}'` : ""}
         
-          ${keyword ? `AND (
+          ${keyword ? `(
             c.message::text ~* '${keyword}' 
             OR c.post_id::text ~* '${keyword}'
             OR c.user_uid::text ~* '${keyword}'
