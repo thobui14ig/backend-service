@@ -27,9 +27,8 @@ export class AppService {
                             AND c.created_at <  '${endDate}'
                     ),
                     'pendingPhoneCommentCount', COUNT(*) FILTER (
-                        WHERE c.created_at >= '${startDate}'
-                            AND c.created_at <  '${endDate}'
-                            and c.is_process_phone = false and c.phone_number is null 
+                        WHERE c.created_at >= NOW() - INTERVAL '24 hours'
+                            and c.is_process_phone = false and c.phone_number is null
                     )
                 )
                 FROM comments c
