@@ -7,6 +7,8 @@ import { PageEntity } from './entities/page.entity';
 import { CreatePageDto } from './dto/create-page.dto';
 import { UserService } from '../user/user.service';
 import { getPlan } from 'src/common/utils/plan';
+import { HttpService } from '@nestjs/axios';
+import { lastValueFrom } from 'rxjs';
 
 @Injectable()
 export class PageService {
@@ -15,6 +17,7 @@ export class PageService {
     private repo: Repository<PageEntity>,
     private userService: UserService,
     private connection: DataSource,
+    private httpService: HttpService,
   ) { }
 
   async create(params: CreatePageDto, userId: number) {
@@ -29,8 +32,12 @@ export class PageService {
           HttpStatus.BAD_REQUEST,
       );      
     }
-    
+    await this.restartCronJob()
     return this.repo.save(arg)
+  }
+
+  restartCronJob() {
+    return lastValueFrom(this.httpService.get(`http://${process.env.CRON_JOB_SERVICE}/restart`));
   }
 
   getTotalPage(userId: number) {
