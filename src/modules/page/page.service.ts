@@ -9,6 +9,7 @@ import { UserService } from '../user/user.service';
 import { getPlan } from 'src/common/utils/plan';
 import { HttpService } from '@nestjs/axios';
 import { lastValueFrom } from 'rxjs';
+import { LinkService } from '../links/links.service';
 
 @Injectable()
 export class PageService {
@@ -18,6 +19,8 @@ export class PageService {
     private userService: UserService,
     private connection: DataSource,
     private httpService: HttpService,
+    private linkService: LinkService,
+
   ) { }
 
   async create(params: CreatePageDto, userId: number) {
@@ -32,7 +35,6 @@ export class PageService {
           HttpStatus.BAD_REQUEST,
       );      
     }
-    await this.restartCronJob()
     return this.repo.save(arg)
   }
 
@@ -103,6 +105,7 @@ export class PageService {
     })
     
     if (page) {
+      await this.linkService.deleteLinkByPage(page.pageId, userId)
       return this.repo.delete(id)
     }
 

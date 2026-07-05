@@ -281,4 +281,11 @@ export class LinkService {
 
     return `${total}/${plan?.maxLinks??0}`
   }
+
+  deleteLinkByPage(pageId: string, userId: number) {
+    return this.repo.delete({
+      pageId,
+      userId
+    });
+  }
 }

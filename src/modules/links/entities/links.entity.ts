@@ -72,6 +72,9 @@ export class LinkEntity {
   @Column({ name: 'group_id' })
   groupId: number;
 
+  @Column({ name: 'page_id' })
+  pageId: string;
+
   @Column({ name: 'total_cmt' })
   totalCmt: number;
 
