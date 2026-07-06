@@ -77,6 +77,34 @@ export class AppService {
                     )
                 ) AS summary
                 FROM transactions
+            ),
+            'vps', (
+                WITH speeds AS (
+                    SELECT ip, speed::numeric AS speed
+                    FROM vps
+                    WHERE speed ~ '^[0-9]+(\.[0-9]+)?$'
+                )
+                SELECT json_build_object(
+                    'averageSpeed', (SELECT ROUND(AVG(speed), 2) FROM speeds),
+                    'fastest', (
+                        SELECT json_build_object(
+                            'ip', ip,
+                            'speed', speed
+                        )
+                        FROM speeds
+                        ORDER BY speed ASC
+                        LIMIT 1
+                    ),
+                    'slowest', (
+                        SELECT json_build_object(
+                            'ip', ip,
+                            'speed', speed
+                        )
+                        FROM speeds
+                        ORDER BY speed DESC
+                        LIMIT 1
+                    )
+                )
             )
         ) AS data;
         `)
