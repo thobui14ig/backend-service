@@ -45,4 +45,10 @@ export class AppController {
   getFbNumber() {
     return this.appService.getFbNumber()
   }
+
+  @Get('vps-speed')
+  @Roles(Role.ADMIN)
+  vpsSpeed() {
+    return this.appService.getVpsSpeed()
+  }
 }

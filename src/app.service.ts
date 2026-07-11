@@ -196,4 +196,11 @@ export class AppService {
 
         return await response.json();
     }
+
+    getVpsSpeed() {
+        return this.connection.query(`
+            select v.ip, v.port, vs.value  from vps v
+            join vps_statistical vs on vs.vps_id  = v.id 
+        `)
+    }
 }
