@@ -19,41 +19,24 @@ export class GroupService {
   }
 
   findAll(user: UserEntity) {
-    if (user.level == LEVEL.ADMIN) {
-      return this.repo.find({
-        select: {
-          id: true,
-          name: true,
-          user: {
-            username: true
-          }
-        },
-        order: {
-          id: "DESC"
-        },
-        relations: {
-          user: true
-        },
-      })      
+    const query = this.repo
+      .createQueryBuilder('g')
+      .leftJoinAndSelect('g.user', 'u')
+      .loadRelationCountAndMap('g.totalLink', 'g.links')
+      .select([
+        'g.id',
+        'g.name',
+        'u.username',
+      ])
+      .orderBy('g.id', 'DESC');
+
+    if (user.level !== LEVEL.ADMIN) {
+      query.where('g.userId = :userId', {
+        userId: user.id,
+      });
     }
-    return this.repo.find({
-      select: {
-        id: true,
-        name: true,
-        user: {
-          username: true
-        }
-      },
-      where: {
-        userId: user.id
-      },
-      relations: {
-        user: true
-      },
-      order: {
-        id: "DESC"
-      }
-    })
+
+    return query.getMany();
   }
 
   findOne(id: number) {

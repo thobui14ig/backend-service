@@ -1,6 +1,6 @@
-import { PageEntity } from 'src/modules/page/entities/page.entity';
+import { LinkEntity } from 'src/modules/links/entities/links.entity';
 import { UserEntity } from 'src/modules/user/entities/user.entity';
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne, JoinColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('group_link')
 export class GroupEntity {
@@ -16,4 +16,7 @@ export class GroupEntity {
     @ManyToOne(() => UserEntity, (user) => user.groups)
     @JoinColumn({ name: 'user_id' })
     user: UserEntity;
+
+    @OneToMany(() => LinkEntity, (link) => link.group)
+    links: LinkEntity[];
 }

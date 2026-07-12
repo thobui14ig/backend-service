@@ -9,6 +9,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { UserEntity } from '../../user/entities/user.entity';
+import { GroupEntity } from 'src/modules/group/entities/group.entity';
 
 export enum LinkStatus {
   Pending = 'pending',
@@ -95,4 +96,8 @@ export class LinkEntity {
 
   @OneToMany(() => CommentEntity, (comment) => comment.link)
   comments: CommentEntity[];
+
+  @ManyToOne(() => GroupEntity, (group) => group.links)
+  @JoinColumn({ name: 'group_id' })
+  group: GroupEntity;
 }

@@ -66,7 +66,7 @@ export class PageService {
       u.username as "username",
       COUNT(l.id) AS "totalLink" 
       from page p
-      left join links l on l.page_id = p.page_id  ${ user.level != LEVEL.ADMIN ? `AND l.user_id=${user.id}` : ""}
+      left join links l on l.page_id = p.page_id AND l.user_id=p.user_id ${ user.level != LEVEL.ADMIN ? `AND l.user_id=${user.id}` : ""}
       left join users u on u.id = p.user_id
       ${condition}
       group by p.id  , u.username 
