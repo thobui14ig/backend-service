@@ -123,7 +123,8 @@ export class UserService {
         balance: true,
         planId: true,
         expiredAt: true,
-        typeConfig: true
+        typeConfig: true,
+        discountAmount: true
       }
     })
 

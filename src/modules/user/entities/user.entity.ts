@@ -45,6 +45,9 @@ export class UserEntity {
   @Column({ name: 'total_link' })
   totalLink: number;
 
+  @Column({ name: 'discount_amount' })
+  discountAmount: number;
+
   @CreateDateColumn({ name: 'created_at', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 
