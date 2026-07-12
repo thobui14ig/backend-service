@@ -37,6 +37,6 @@ export class PageController {
   @Delete(':id')
   remove(@Param('id') id: string,  @Req() req: Request) {
     const user = getUser(req);
-    return this.pageService.remove(+id, user.id);
+    return this.pageService.remove(+id, user);
   }
 }

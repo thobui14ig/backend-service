@@ -96,19 +96,19 @@ export class PageService {
     throw new ForbiddenException('Bạn không có quyền');
   }
 
-  async remove(id: number, userId: number) {
+  async remove(id: number, user: UserEntity) {
     const page = await this.repo.findOne({
       where: {
         id,
-        userId
       }
     })
-    
-    if (page) {
-      await this.linkService.deleteLinkByPage(page.pageId, userId)
-      return this.repo.delete(id)
+    const isAdmin = user.level === LEVEL.ADMIN;
+    const isOwner = page.userId === user.id;
+    if (!isAdmin && !isOwner) {
+      throw new ForbiddenException('Bạn không có quyền');
     }
-
-    throw new ForbiddenException('Bạn không có quyền');
+    
+    await this.linkService.deleteLinkByPage(page.pageId, user.id)
+    return this.repo.delete(id)
   }
 }
