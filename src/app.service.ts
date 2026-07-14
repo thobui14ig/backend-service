@@ -28,12 +28,12 @@ export class AppService {
                     ),
                     'pendingPhoneCommentCount', COUNT(*) FILTER (
                         WHERE c.created_at >= NOW() - INTERVAL '24 hours'
-                            and c.is_process_phone = false and c.phone_number is null
+                            and c.is_process_phone = false and c.phone_number is null  and u.is_get_phone = true
                     )
                 )
                 FROM comments c
                 join links l on l.id = c.link_id ${user.level === LEVEL.USER ? `and l.user_id = ${user.id}` : ""}
-                join users u on u.id = l.user_id and u.is_get_phone = true
+                join users u on u.id = l.user_id
             ),
 
             'link', (
