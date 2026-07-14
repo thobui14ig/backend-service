@@ -32,7 +32,8 @@ export class AppService {
                     )
                 )
                 FROM comments c
-                ${user.level === LEVEL.USER ? `join links l on l.id = c.link_id and l.user_id = ${user.id}` : ""}
+                join links l on l.id = c.link_id ${user.level === LEVEL.USER ? `and l.user_id = ${user.id}` : ""}
+                join users u on u.id = l.user_id and u.is_get_phone = true
             ),
 
             'link', (
