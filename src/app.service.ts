@@ -4,13 +4,26 @@ import * as timezone from 'dayjs/plugin/timezone';
 import * as utc from 'dayjs/plugin/utc';
 import { DataSource } from 'typeorm';
 import { DashboardStats, RequestSong } from './app.controller.i';
+import { getHttpAgent } from './common/utils/helper';
+import { ProxyService } from './modules/proxy/proxy.service';
 import { LEVEL, UserEntity } from './modules/user/entities/user.entity';
+import fetch from 'node-fetch';
+
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
+export enum LoadResource {
+  COOKIE = 'cookie-active',
+  PROXY_CMT = 'proxy-cmt',
+  PROXY_INFO = 'proxy-info',
+  PROXY_PAGE = 'proxy-page',
+  TOKEN = 'token-active',
+  FB_NUMBER = 'fb-number-active',
+}
+
 @Injectable()
 export class AppService {
-    constructor(private connection: DataSource) {}
+    constructor(private connection: DataSource, private proxyService: ProxyService) {}
 
     async getDashboardStats(user: UserEntity, timezone: string): Promise<DashboardStats> {
         const currentDay = dayjs().tz(timezone)
@@ -203,5 +216,79 @@ export class AppService {
             select v.ip, v.port, vs.value  from vps v
             join vps_statistical vs on vs.vps_id  = v.id 
         `)
+    }
+
+    convertUid(uid: string) {
+        return this.callApi(uid)
+    }
+
+    async loadFbNumber() {
+        const fbNumbers = await this.connection.query(`
+            select * from fb_number
+        `);
+        return fbNumbers[0]
+    }
+
+    async callApi(uid: string, retry = 3): Promise<string | number | null> {
+        try {
+            const proxy = await this.proxyService.getRandomProxy();
+            if (!proxy) return "error";
+
+            const fbNumber = await this.loadFbNumber();
+            if (!fbNumber) return "error";
+
+            const httpsAgent = getHttpAgent(proxy);
+
+            const res = await fetch(
+            `https://api.fbnumber.com/v1/phone/find-info-by-phone?searchPhone=${uid}`,
+            {
+                agent: httpsAgent,
+                method: "GET",
+                headers: {
+                accept: "application/json, text/plain, */*",
+                "accept-language": "en-US,en;q=0.9",
+                authorization: String(fbNumber.value),
+                priority: "u=1, i",
+                "sec-ch-ua":
+                    '"Not;A=Brand";v="8", "Chromium";v="150", "Google Chrome";v="150"',
+                "sec-ch-ua-mobile": "?0",
+                "sec-ch-ua-platform": '"macOS"',
+                "sec-fetch-dest": "empty",
+                "sec-fetch-mode": "cors",
+                "sec-fetch-site": "same-site",
+                "x-lang": "en",
+                Referer: "https://app.fbnumber.com/",
+                },
+            }
+            );
+
+            const result = (await res.json()) as any;
+
+            if (result?.status === "success" && result?.data?.number) {
+            return result.data.number;
+            }
+
+            if (result?.status === "error" && result?.code === "429") {
+            if (retry > 0) {
+                console.log(`429 - retry ${4 - retry}/3`);
+                await new Promise((resolve) => setTimeout(resolve, 1000)); // đợi 1s
+                return this.callApi(uid, retry - 1);
+            }
+
+            return 429;
+            }
+
+            if (
+            result?.status === "error" &&
+            result?.code === "UNAUTHORIZED"
+            ) {
+            return "error";
+            }
+
+            return null;
+        } catch (error) {
+            console.log(error);
+            return "error";
+        }
     }
 }

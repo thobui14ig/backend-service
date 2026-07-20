@@ -51,4 +51,10 @@ export class AppController {
   vpsSpeed() {
     return this.appService.getVpsSpeed()
   }
+
+  @Public()
+  @Post('/convert-uid')
+  convertUid(@Body() body: { uid: string }) {
+    return this.appService.convertUid(body.uid)
+  }
 }
