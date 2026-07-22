@@ -1,4 +1,5 @@
 import { GroupEntity } from 'src/modules/group/entities/group.entity';
+import { UserEntity } from 'src/modules/user/entities/user.entity';
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 
 @Entity('page')
@@ -17,4 +18,8 @@ export class PageEntity {
 
     @Column({ name: "is_active" })
     isActive: boolean;
+
+    @ManyToOne(() => UserEntity, (user) => user.pages)
+    @JoinColumn({ name: 'user_id' })
+    user: UserEntity;
 }

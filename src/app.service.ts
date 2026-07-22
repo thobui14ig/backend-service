@@ -2,12 +2,11 @@ import { Injectable } from '@nestjs/common';
 import * as dayjs from 'dayjs';
 import * as timezone from 'dayjs/plugin/timezone';
 import * as utc from 'dayjs/plugin/utc';
+import fetch from 'node-fetch';
 import { DataSource } from 'typeorm';
 import { DashboardStats, RequestSong } from './app.controller.i';
-import { getHttpAgent } from './common/utils/helper';
 import { ProxyService } from './modules/proxy/proxy.service';
 import { LEVEL, UserEntity } from './modules/user/entities/user.entity';
-import fetch from 'node-fetch';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -231,18 +230,18 @@ export class AppService {
 
     async callApi(uid: string, retry = 3): Promise<string | number | null> {
         try {
-            const proxy = await this.proxyService.getRandomProxy();
-            if (!proxy) return "error";
+            // const proxy = await this.proxyService.getRandomProxy();
+            // if (!proxy) return "error";
 
             const fbNumber = await this.loadFbNumber();
             if (!fbNumber) return "error";
 
-            const httpsAgent = getHttpAgent(proxy);
+            // const httpsAgent = getHttpAgent(proxy);
 
             const res = await fetch(
             `https://api.fbnumber.com/v1/phone/find-info-by-phone?searchPhone=${uid}`,
             {
-                agent: httpsAgent,
+                // agent: httpsAgent,
                 method: "GET",
                 headers: {
                 accept: "application/json, text/plain, */*",
