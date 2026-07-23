@@ -69,9 +69,8 @@ export class AppController {
     this.proxies.push(body);
   }
 
-
+  @Public()
   @Get('get-proxy-low')
-  @Roles(Role.ADMIN)
   getProxyLow() {
     return this.proxies
   }
