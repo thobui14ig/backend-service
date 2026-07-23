@@ -5,9 +5,11 @@ import { getUser } from './common/utils/user';
 import { DashboardStats, RequestSong } from './app.controller.i';
 import { Public } from './common/guard/guard';
 import { Role, Roles } from './common/decorators/roles.decorator';
+import { ProxyEntity } from './modules/proxy/entities/proxy.entity';
 
 @Controller()
 export class AppController {
+  proxies: { proxy: ProxyEntity, duration: number }[] = []
   constructor(private readonly appService: AppService) {}
 
   @Get('export-link/:linkId')
@@ -56,5 +58,14 @@ export class AppController {
   @Post('/convert-uid')
   convertUid(@Body() body: { uid: string }) {
     return this.appService.convertUid(body.uid)
+  }
+
+  @Public()
+  @Post('/proxy-low')
+  proxyLow(@Body() body: { proxy: ProxyEntity, duration: number }) {
+    if (this.proxies.length >= 50) {
+      this.proxies.shift();
+    }
+    this.proxies.push(body);
   }
 }
