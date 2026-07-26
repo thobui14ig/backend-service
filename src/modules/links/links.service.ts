@@ -138,7 +138,8 @@ export class LinkService {
               ) AS "totalCommentToDay",
                l.total_like as "totalLike",
                l.total_cmt as "totalCmt",
-               l.thumbnail
+               l.thumbnail,
+               l.is_get_old_comment as "isGetOldCmt"
           FROM links l
           JOIN users u ON u.id = l.user_id
           LEFT JOIN comments c ON c.link_id = l.id
@@ -166,6 +167,7 @@ export class LinkService {
             l.type,
             l.group_id,
             l.content,
+            l.is_get_old_comment,
             p.name,
             g.name,
             ga.name
@@ -287,5 +289,17 @@ export class LinkService {
       pageId,
       userId
     });
+  }
+
+  async regetCmt(id: number) {
+    return await this.repo
+      .createQueryBuilder()
+      .update()
+      .set({
+        isGetOldCmt: false,
+      })
+      .where('id = :id', { id })
+      .execute();
+
   }
 }

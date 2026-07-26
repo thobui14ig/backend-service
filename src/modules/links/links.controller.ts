@@ -62,4 +62,10 @@ export class LinkController {
     const user = getUser(req);
     return this.linkService.delete(id, user.level, user.id);
   }
+
+  @Get('/reget-cmt/:id')
+  regetCmt(@Param('id') id: number, @Req() req: Request,) {
+    // const user = getUser(req);
+    return this.linkService.regetCmt(id);
+  }
 }

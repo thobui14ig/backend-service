@@ -85,6 +85,9 @@ export class LinkEntity {
   @Column({ name: 'thumbnail' })
   thumbnail: string;
 
+  @Column({ name: 'is_get_old_comment' })
+  isGetOldCmt: boolean;
+
   @CreateDateColumn({
     name: 'created_at',
   })
