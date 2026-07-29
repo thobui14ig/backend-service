@@ -29,6 +29,11 @@ export enum HideBy {
   KEYWORDS = 'keywords'
 }
 
+export enum EPlatform {
+  TIKTOK = "tiktok",
+  FACEBOOK = "facebook"
+}
+
 @Entity('links')
 export class LinkEntity {
   @PrimaryGeneratedColumn()
@@ -87,6 +92,9 @@ export class LinkEntity {
 
   @Column({ name: 'is_get_old_comment' })
   isGetOldCmt: boolean;
+
+  @Column({ name: 'platform' })
+  platform: EPlatform
 
   @CreateDateColumn({
     name: 'created_at',

@@ -6,7 +6,7 @@ import * as utc from 'dayjs/plugin/utc';
 import { DataSource, In, Repository } from 'typeorm';
 import { LEVEL } from '../user/entities/user.entity';
 import { UpdateLinkDTO } from './dto/update-link.dto';
-import { LinkEntity, LinkStatus } from './entities/links.entity';
+import { EPlatform, LinkEntity, LinkStatus } from './entities/links.entity';
 import { BodyLinkQuery, CreateLinkParams } from './links.service.i';
 import { UserService } from '../user/user.service';
 import { getPlan } from 'src/common/utils/plan';
@@ -43,7 +43,9 @@ export class LinkService {
           delayTime,
           status: params.status,
           linkName: link.name,
-          groupId: params.groupId
+          groupId: params.groupId,
+          platform: params.platform,
+          postId: params.platform == EPlatform.TIKTOK ? this.extractTikTokVideoId(link.url) : undefined
         }
         linkEntities.push(entity)
         continue
@@ -75,6 +77,11 @@ export class LinkService {
     );
   }
 
+  extractTikTokVideoId(url: string): string | null {
+    const match = url.match(/\/video\/(\d+)/);
+    return match ? match[1] : null;
+  }
+
   getOne(id: number) {
     return this.repo.findOne({
       where: {
@@ -83,7 +90,7 @@ export class LinkService {
     });
   }
 
-  async getAll(body: BodyLinkQuery, level: LEVEL, userIdByUerLogin: number, isFilter: boolean, limit: number, offset: number) {
+  async getAll(body: BodyLinkQuery, level: LEVEL, userIdByUerLogin: number, isFilter: boolean, limit: number, offset: number, platform: EPlatform) {
     const { type, groupId, groupAutoId, timezone, pageId, userId } = body
     const currentDay = dayjs().tz(timezone)
     const startDate = currentDay.startOf('day').utc().format('YYYY-MM-DD HH:mm:ss');
@@ -113,6 +120,10 @@ export class LinkService {
       queryEntends += ` AND l.user_id = '${userId}'`
     }
 
+    if (platform) {
+      queryEntends += ` AND l.platform = '${platform}'`
+    }
+
     const query = `
       WITH filtered_links AS (
           SELECT
@@ -130,7 +141,6 @@ export class LinkService {
               l.content,
               p.name as "pageName",
               g.name as "groupName",
-              ga.name as "groupAutoName",
               COUNT(c.id) AS "totalComment",
               COUNT(c.id) FILTER (
                 WHERE c.created_at >= '${startDate}'
@@ -145,7 +155,6 @@ export class LinkService {
           LEFT JOIN comments c ON c.link_id = l.id
           LEFT JOIN page p ON p.page_id = l.page_id and l.user_id=p.user_id
           LEFT JOIN group_link g ON l.group_id = g.id
-          LEFT JOIN group_auto ga ON l.group_auto_id = ga.id
           WHERE l.is_deleted = false and l.is_link_group = false ${queryEntends}
         ${keyword ? `AND (
             l.post_id::text ~* '${keyword}'
@@ -169,8 +178,7 @@ export class LinkService {
             l.content,
             l.is_get_old_comment,
             p.name,
-            g.name,
-            ga.name
+            g.name
       )
       SELECT *, (SELECT COUNT(*) FROM filtered_links) AS "totalCount"
       FROM filtered_links
@@ -301,5 +309,9 @@ export class LinkService {
       .where('id = :id', { id })
       .execute();
 
+  }
+
+  deleteIds(ids: number[]) {
+    return this.repo.delete(ids)
   }
 }

@@ -11,7 +11,7 @@ import {
   MinLength,
   ValidateNested,
 } from 'class-validator';
-import { LinkStatus } from '../entities/links.entity';
+import { EPlatform, LinkStatus } from '../entities/links.entity';
 import { Optional } from '@nestjs/common';
 import { Type } from 'class-transformer';
 
@@ -44,4 +44,7 @@ export class CreateLinkDTO {
 
   @IsEnum(LinkStatus)
   status: LinkStatus;
+
+  @IsEnum(EPlatform)
+  platform: EPlatform;
 }

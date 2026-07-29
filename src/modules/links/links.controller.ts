@@ -17,6 +17,7 @@ import { UpdateLinkDTO } from './dto/update-link.dto';
 import { CheckLimitLinkUserWhenAddLinkInterceptor } from './interceptors/handle-check-limit-link-user-when-add-link.interceptor';
 import { LinkService } from './links.service';
 import { BodyLinkQuery } from './links.service.i';
+import { EPlatform } from './entities/links.entity';
 
 @Controller('links')
 export class LinkController {
@@ -45,10 +46,10 @@ export class LinkController {
   }
 
   @Post('/query')
-  getLinks(@Req() req: Request, @Body() body: BodyLinkQuery, @Query('isFilter') isFilter: number, @Query('limit') limit: number, @Query('offset') offset: number) {
+  getLinks(@Req() req: Request, @Body() body: BodyLinkQuery, @Query('isFilter') isFilter: number, @Query('limit') limit: number, @Query('offset') offset: number, @Query('platform') platform: EPlatform) {
     const user = getUser(req);
 
-    return this.linkService.getAll(body, user.level, user.id, !!Number(isFilter), limit, offset);
+    return this.linkService.getAll(body, user.level, user.id, !!Number(isFilter), limit, offset, platform);
   }
 
   @Put()
@@ -67,5 +68,10 @@ export class LinkController {
   regetCmt(@Param('id') id: number, @Req() req: Request,) {
     // const user = getUser(req);
     return this.linkService.regetCmt(id);
+  }
+
+  @Post('delete-ids')
+  deleteIds(@Body() body: { ids: number[] }) {
+    return this.linkService.deleteIds(body.ids)
   }
 }
