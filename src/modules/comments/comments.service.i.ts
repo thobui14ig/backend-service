@@ -1,4 +1,5 @@
 import dayjs from "dayjs"
+import { EPlatform } from "../links/entities/links.entity"
 
 export interface IGetCommentParams {
     startDate: string 
@@ -11,4 +12,5 @@ export interface IGetCommentParams {
     timezone: string
     isExport: boolean
     hasPhone?: boolean
+    platform: EPlatform
 }

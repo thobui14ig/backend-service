@@ -6,7 +6,7 @@ import * as utc from 'dayjs/plugin/utc';
 import { DataSource, In, Repository } from 'typeorm';
 import { LEVEL } from '../user/entities/user.entity';
 import { UpdateLinkDTO } from './dto/update-link.dto';
-import { EPlatform, LinkEntity, LinkStatus } from './entities/links.entity';
+import { EPlatform, LinkEntity, LinkStatus, LinkType } from './entities/links.entity';
 import { BodyLinkQuery, CreateLinkParams } from './links.service.i';
 import { UserService } from '../user/user.service';
 import { getPlan } from 'src/common/utils/plan';
@@ -45,7 +45,9 @@ export class LinkService {
           linkName: link.name,
           groupId: params.groupId,
           platform: params.platform,
-          postId: params.platform == EPlatform.TIKTOK ? this.extractTikTokVideoId(link.url) : undefined
+          postId: params.platform == EPlatform.TIKTOK ? this.extractTikTokVideoId(link.url) : undefined,
+          process: params.platform == EPlatform.TIKTOK ? true : undefined,
+          type: params.platform == EPlatform.TIKTOK ? LinkType.PUBLIC : undefined,
         }
         linkEntities.push(entity)
         continue

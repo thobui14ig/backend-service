@@ -26,6 +26,7 @@ export class CommentsService {
     const startDate = params.startDate ? vnNowStart.startOf('day').utc().format('YYYY-MM-DD HH:mm:ss') : null
     const endDate = params.endDate ? vnNowEnd.endOf('day').utc().format('YYYY-MM-DD HH:mm:ss') : null
     const keyword = params?.keyword?.length > 0 ? params?.keyword?.trim() : null
+    const platform = params.platform
 
     let response = []
     const limit = params.limit
@@ -62,7 +63,7 @@ export class CommentsService {
           COUNT(*) OVER() AS totalCount
       FROM comments c
       JOIN links l 
-          ON l.id = c.link_id and l.is_deleted = false and l.is_link_group = false
+          ON l.id = c.link_id and l.is_deleted = false and l.is_link_group = false and l.platform = '${platform}'
       WHERE 
         ${condition}
         ${startDate && endDate ?  `c.created_at BETWEEN '${startDate}' AND '${endDate}' AND` : ""}
