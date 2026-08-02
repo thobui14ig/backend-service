@@ -12,6 +12,7 @@ export interface BodyLinkQuery {
     groupId: number | null
     groupAutoId: number | null
     pageId: number | null
+    tiktokId: number | null
     timezone: string
 }
 

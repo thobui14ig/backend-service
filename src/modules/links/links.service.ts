@@ -93,7 +93,7 @@ export class LinkService {
   }
 
   async getAll(body: BodyLinkQuery, level: LEVEL, userIdByUerLogin: number, isFilter: boolean, limit: number, offset: number, platform: EPlatform) {
-    const { type, groupId, groupAutoId, timezone, pageId, userId } = body
+    const { type, groupId, groupAutoId, timezone, pageId, userId, tiktokId } = body
     const currentDay = dayjs().tz(timezone)
     const startDate = currentDay.startOf('day').utc().format('YYYY-MM-DD HH:mm:ss');
     const endDate = currentDay.endOf('day').utc().format('YYYY-MM-DD HH:mm:ss');
@@ -120,6 +120,10 @@ export class LinkService {
 
     if (userId) {
       queryEntends += ` AND l.user_id = '${userId}'`
+    }
+
+    if (tiktokId) {
+      queryEntends += ` AND l.tiktok_id = ${tiktokId}`
     }
 
     if (platform) {
@@ -297,6 +301,13 @@ export class LinkService {
   deleteLinkByPage(pageId: string, userId: number) {
     return this.repo.delete({
       pageId,
+      userId
+    });
+  }
+
+  deleteLinkByTiktok(tiktokId: number, userId: number) {
+    return this.repo.delete({
+      tiktokId,
       userId
     });
   }

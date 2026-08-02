@@ -81,6 +81,9 @@ export class LinkEntity {
   @Column({ name: 'page_id' })
   pageId: string;
 
+  @Column({ name: 'tiktok_id' })
+  tiktokId: number;
+
   @Column({ name: 'total_cmt' })
   totalCmt: number;
 

@@ -41,6 +41,8 @@ import { PageEntity } from './modules/page/entities/page.entity';
 import { NotificationModule } from './modules/notification/notification.module';
 import { TransactionModule } from './modules/transaction/transaction.module';
 import { UserModule } from './modules/user/user.module';
+import { UserTiktokModule } from './modules/user-tiktok/user-tiktok.module';
+import { UserTiktokEntity } from './modules/user-tiktok/entities/page.entity';
 
 @Module({
   imports: [
@@ -75,6 +77,7 @@ import { UserModule } from './modules/user/user.module';
           PhoneCustomerEntity,
           GroupEntity,
           PageEntity,
+          UserTiktokEntity
         ],
         // logging: true,
         // synchronize: true, // chỉ dùng trong dev!
@@ -103,6 +106,7 @@ import { UserModule } from './modules/user/user.module';
     NotificationModule,
     TransactionModule,
     UserModule,
+    UserTiktokModule,
   ],
   controllers: [AppController],
   providers: [
