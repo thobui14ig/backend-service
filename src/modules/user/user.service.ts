@@ -125,7 +125,8 @@ export class UserService {
         planId: true,
         expiredAt: true,
         typeConfig: true,
-        discountAmount: true
+        discountAmount: true,
+        maxPage: true,
       }
     })
 

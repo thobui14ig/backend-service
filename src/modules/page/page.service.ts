@@ -1,15 +1,14 @@
+import { HttpService } from '@nestjs/axios';
 import { ForbiddenException, HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { lastValueFrom } from 'rxjs';
 import { DataSource, Repository } from 'typeorm';
+import { LinkService } from '../links/links.service';
 import { LEVEL, UserEntity } from '../user/entities/user.entity';
+import { UserService } from '../user/user.service';
+import { CreatePageDto } from './dto/create-page.dto';
 import { UpdatePageDto } from './dto/update-page.dto';
 import { PageEntity } from './entities/page.entity';
-import { CreatePageDto } from './dto/create-page.dto';
-import { UserService } from '../user/user.service';
-import { getPlan } from 'src/common/utils/plan';
-import { HttpService } from '@nestjs/axios';
-import { lastValueFrom } from 'rxjs';
-import { LinkService } from '../links/links.service';
 
 @Injectable()
 export class PageService {
@@ -27,11 +26,10 @@ export class PageService {
     const arg = { ...params, userId }
     const totalPage = await this.getTotalPage(userId)
     const user = await this.userService.getInfo(userId)
-    const plan = getPlan(user.planId, user.id)
 
-    if (totalPage >= plan.maxPage) {
+    if (totalPage >= user.maxPage) {
       throw new HttpException(
-          `Vip${plan.id} chỉ được thêm tối đa ${plan.maxPage} page`,
+          `Tài khoản của bạn chỉ được thêm tối đa ${user.maxPage} page`,
           HttpStatus.BAD_REQUEST,
       );      
     }

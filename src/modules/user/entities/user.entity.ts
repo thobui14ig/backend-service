@@ -46,6 +46,9 @@ export class UserEntity {
   @Column({ name: 'total_link' })
   totalLink: number;
 
+  @Column({ name: 'max_page' })
+  maxPage: number;
+
   @Column({ name: 'discount_amount' })
   discountAmount: number;
 
