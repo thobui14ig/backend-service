@@ -1,10 +1,11 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req, UseInterceptors } from '@nestjs/common';
 import { Request } from 'express';
 import { getUser } from 'src/common/utils/user';
 import { CheckVipInterceptor } from './interceptors/check-vip';
 import { UpdateUserTiktokDto } from './dto/update-user-tiktok.dto';
 import { CreateUserTiktokDto } from './dto/create-user-tiktok.dto';
 import { UserTiktokService } from './user-tiktok.service';
+import { Public } from 'src/common/guard/guard';
 
 @Controller('tiktok-users')
 export class UserTiktokController {
@@ -20,6 +21,12 @@ export class UserTiktokController {
   findAll(@Req() req: Request,) {
     const user = getUser(req);
     return this.userTiktokService.findAll(user);
+  }
+
+  @Get('get-all-public/:id')
+  @Public()
+  findAllPublic(@Req() req: Request, @Param('id') id: string) {
+    return this.userTiktokService.findAllPublic(id);
   }
 
   @Get(':id')

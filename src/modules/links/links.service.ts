@@ -327,4 +327,53 @@ export class LinkService {
   deleteIds(ids: number[]) {
     return this.repo.delete(ids)
   }
+
+  getByPostId(postId: string, userId: number) {
+    return this.repo.findOne({
+      where: {
+        postId,
+        userId,
+      },
+    });
+  }
+
+  async insertLinkPublic(
+    roomId: string,
+    tiktokId: number,
+    nickname: string,
+    userId: number,
+  ) {
+    try {
+      // Check if link already exists
+      const existingLink = await this.getByPostId(
+        roomId,
+        userId,
+      );
+
+      if (existingLink) {
+        return existingLink;
+      }
+
+      // Create new link record
+      const link = {
+        linkUrl: `https://www.tiktok.com/@${nickname}`,
+        linkName: '',
+        content: '',
+        postId: roomId,
+        type: LinkType.PUBLIC,
+        status: LinkStatus.Started,
+        delayTime: 10,
+        userId,
+        isLinkGroup: false,
+        process: true,
+        tiktokId: tiktokId,
+        platform: EPlatform.TIKTOK,
+      };
+
+      const savedLink = await this.repo.save(link);
+      return savedLink;
+    } catch (error) {
+      return null;
+    }
+  }
 }

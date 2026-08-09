@@ -68,12 +68,15 @@ export class UserService {
     `)
   }
 
-  findById(id: number) {
-    return this.repo.findOne({
+  async findById(id: number) {
+    const res = await this.repo.findOne({
       where: {
         id,
       },
     });
+    delete res.password
+
+    return res
   }
 
   async getAll() {

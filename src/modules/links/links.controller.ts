@@ -18,6 +18,7 @@ import { CheckLimitLinkUserWhenAddLinkInterceptor } from './interceptors/handle-
 import { LinkService } from './links.service';
 import { BodyLinkQuery } from './links.service.i';
 import { EPlatform } from './entities/links.entity';
+import { Public } from 'src/common/guard/guard';
 
 @Controller('links')
 export class LinkController {
@@ -73,5 +74,16 @@ export class LinkController {
   @Post('delete-ids')
   deleteIds(@Body() body: { ids: number[] }) {
     return this.linkService.deleteIds(body.ids)
+  }
+
+  @Post('insert-link-public')
+  @Public()
+  insertLinkPublic(@Req() req: Request, @Body() body: {
+    roomId: string,
+    tiktokId: number,
+    nickname: string,
+    userId: number,
+  }) {
+    return this.linkService.insertLinkPublic(body.roomId, body.tiktokId, body.nickname, body.userId);
   }
 }

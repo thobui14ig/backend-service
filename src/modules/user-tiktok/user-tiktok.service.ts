@@ -72,6 +72,17 @@ export class UserTiktokService {
     `)
   }
 
+  findAllPublic(id: string) {
+    return this.repo.find({
+      where: {
+        userId: Number(id)
+      },
+      order: {
+        id: 'DESC'
+      }
+    })
+  }
+
   findOne(id: number) {
     return this.repo.findOne({
       where: {
