@@ -48,14 +48,17 @@ export class PageService {
     });
   }
 
-  findAll(user: UserEntity) {
+  findAll(user: UserEntity, userId: null | undefined) {
     let condition = ""
 
     if (user.level != LEVEL.ADMIN) {
       condition += `where p.user_id = ${user.id}`
     }
 
-    return this.connection.query(`
+    const conditionUser = user.level != LEVEL.ADMIN ? `AND l.user_id=${user.id}` : ""
+    const conditionUserForAdmin = userId ? `AND u.id = ${userId}` : ""
+
+    const query = `
       select p.id,
       p.user_id as "userId",
       p.page_id as "pageId",
@@ -64,12 +67,13 @@ export class PageService {
       u.username as "username",
       COUNT(l.id) AS "totalLink" 
       from page p
-      left join links l on l.page_id = p.page_id AND l.user_id=p.user_id ${ user.level != LEVEL.ADMIN ? `AND l.user_id=${user.id}` : ""}
-      left join users u on u.id = p.user_id
+      left join links l on l.page_id = p.page_id AND l.user_id=p.user_id ${conditionUser}
+      join users u on u.id = p.user_id ${conditionUserForAdmin}
       ${condition}
       group by p.id  , u.username 
       order by p.id desc
-    `)
+    `
+    return this.connection.query(query)
   }
 
   findOne(id: number) {

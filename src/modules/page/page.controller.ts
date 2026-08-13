@@ -16,10 +16,10 @@ export class PageController {
     return this.pageService.create(dto, user.id);
   }
 
-  @Get()
-  findAll(@Req() req: Request,) {
+  @Post('find-all')
+  findAll(@Req() req: Request, @Body() body: { userId: null | undefined }) {
     const user = getUser(req);
-    return this.pageService.findAll(user);
+    return this.pageService.findAll(user, body.userId);
   }
 
   @Get(':id')
