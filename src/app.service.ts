@@ -42,6 +42,8 @@ export class AppService {
                         WHERE c.created_at >= NOW() - INTERVAL '24 hours'
                             and c.is_process_phone = false and c.phone_number is null  and u.is_get_phone = true
                             and l.platform in ('facebook')
+                            AND c.user_uid NOT LIKE 'Y29tb%'
+                            AND c.user_uid NOT LIKE '%pfbid%'
                     )
                 )
                 FROM comments c
