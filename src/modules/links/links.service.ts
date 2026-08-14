@@ -129,75 +129,96 @@ export class LinkService {
     if (platform) {
       queryEntends += ` AND l.platform = '${platform}'`
     }
+    
+    const baseWhere = `
+      FROM links l
+      JOIN users u ON u.id = l.user_id
+      LEFT JOIN comments c ON c.link_id = l.id
+      LEFT JOIN page p ON p.page_id = l.page_id AND l.user_id = p.user_id
+      LEFT JOIN group_link g ON l.group_id = g.id
+      WHERE l.is_deleted = false
+        AND l.is_link_group = false
+        ${queryEntends}
+        ${
+          keyword
+            ? `AND (
+                l.post_id::text ~* '${keyword}'
+                OR l.link_name::text ~* '${keyword}'
+                OR l.link_url::text ~* '${keyword}'
+                OR l.status::text ~* '${keyword}'
+                OR u.username::text ~* '${keyword}'
+              )`
+            : ''
+        }
+    `;
 
-    const query = `
-      WITH filtered_links AS (
-          SELECT
-              l.id,
-              l.link_name AS "linkName",
-              l.link_url AS "linkUrl",
-              l.post_id AS "postId",
-              l.delay_time AS "delayTime",
-              l.status,
-              l.created_at::TEXT AS "createdAt",
-              l.last_comment_time::TEXT AS "lastCommentTime",
-              u.username,
-              l.type,
-              l.group_id as "groupId",
-              l.content,
-              p.name as "pageName",
-              g.name as "groupName",
-              COUNT(c.id) AS "totalComment",
-              COUNT(c.id) FILTER (
-                WHERE c.created_at >= '${startDate}'
-                AND c.created_at < '${endDate}'
-              ) AS "totalCommentToDay",
-               l.total_like as "totalLike",
-               l.total_cmt as "totalCmt",
-               l.thumbnail,
-               l.is_get_old_comment as "isGetOldCmt"
-          FROM links l
-          JOIN users u ON u.id = l.user_id
-          LEFT JOIN comments c ON c.link_id = l.id
-          LEFT JOIN page p ON p.page_id = l.page_id and l.user_id=p.user_id
-          LEFT JOIN group_link g ON l.group_id = g.id
-          WHERE l.is_deleted = false and l.is_link_group = false ${queryEntends}
-        ${keyword ? `AND (
-            l.post_id::text ~* '${keyword}'
-            OR l.link_name::text ~* '${keyword}'
-            OR l.link_url::text ~* '${keyword}'
-            OR l.status::text ~* '${keyword}'
-            OR u.username::text ~* '${keyword}'
-          )` : ""}
-            GROUP BY
-            l.id,
-            l.link_name,
-            l.link_url,
-            l.post_id,
-            l.delay_time,
-            l.status,
-            l.created_at,
-            l.last_comment_time,
-            u.username,
-            l.type,
-            l.group_id,
-            l.content,
-            l.is_get_old_comment,
-            p.name,
-            g.name
-      )
-      SELECT *, (SELECT COUNT(*) FROM filtered_links) AS "totalCount"
-      FROM filtered_links
-      ORDER BY "createdAt" DESC
-      LIMIT ${limit} OFFSET ${offset};
+    const dataQuery = `
+      SELECT
+          l.id,
+          l.link_name AS "linkName",
+          l.link_url AS "linkUrl",
+          l.post_id AS "postId",
+          l.delay_time AS "delayTime",
+          l.status,
+          l.created_at::TEXT AS "createdAt",
+          l.last_comment_time::TEXT AS "lastCommentTime",
+          u.username,
+          l.type,
+          l.group_id AS "groupId",
+          l.content,
+          p.name AS "pageName",
+          g.name AS "groupName",
 
-      `
-    let response: any[] = await this.connection.query(query, [])
+          COUNT(c.id) AS "totalComment",
+
+          COUNT(c.id) FILTER (
+            WHERE c.created_at >= '${startDate}'
+            AND c.created_at < '${endDate}'
+          ) AS "totalCommentToDay",
+
+          l.total_like AS "totalLike",
+          l.total_cmt AS "totalCmt",
+          l.thumbnail,
+          l.is_get_old_comment AS "isGetOldCmt"
+
+      ${baseWhere}
+
+      GROUP BY
+          l.id,
+          l.link_name,
+          l.link_url,
+          l.post_id,
+          l.delay_time,
+          l.status,
+          l.created_at,
+          l.last_comment_time,
+          u.username,
+          l.type,
+          l.group_id,
+          l.content,
+          l.is_get_old_comment,
+          p.name,
+          g.name
+
+      ORDER BY l.created_at DESC
+      LIMIT ${limit}
+      OFFSET ${offset};
+    `;
+
+    const countQuery = `
+      SELECT COUNT(DISTINCT l.id) AS "totalCount"
+      ${baseWhere};
+    `;
+
+    const [response, countResponse] = await Promise.all([
+      this.connection.query(dataQuery),
+      this.connection.query(countQuery),
+    ]);
 
     return {
       data: response,
-      totalCount: response.length > 0 ? response[0].totalCount : 0
-    }
+      totalCount: Number(countResponse[0]?.totalCount || 0),
+    };
   }
 
 
