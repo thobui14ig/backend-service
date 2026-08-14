@@ -28,7 +28,6 @@ export class CommentsService {
     const keyword = params?.keyword?.length > 0 ? params?.keyword?.trim() : null
     const platform = params.platform
 
-    let response = []
     const limit = params.limit
     const offset = params.offset
 
@@ -44,7 +43,7 @@ export class CommentsService {
     if (isGetPhone) {
       condition += ` c.phone_number IS NOT NULL AND `
     }
-    const query = `
+    const querySelect = `
       SELECT 
           c.id,
           c.post_id       AS "postId",
@@ -59,8 +58,7 @@ export class CommentsService {
               'id', l.id,
               'linkName', l.link_name,
               'linkUrl', l.link_url
-          ) AS link,
-          COUNT(*) OVER() AS totalCount
+          ) AS link
       FROM comments c
       JOIN links l 
           ON l.id = c.link_id and l.is_deleted = false and l.is_link_group = false and l.platform = '${platform}'
@@ -77,10 +75,32 @@ export class CommentsService {
       ORDER BY c.created_at ${isExport ? "ASC" : "DESC"}
       LIMIT ${limit} OFFSET ${offset};
     `
-    response = await this.connection.query(query)
+
+    const queryCount = `
+      SELECT 
+          COUNT(*) AS totalCount
+      FROM comments c
+      JOIN links l 
+          ON l.id = c.link_id and l.is_deleted = false and l.is_link_group = false and l.platform = '${platform}'
+      WHERE 
+        ${condition}
+        ${startDate && endDate ?  `c.created_at BETWEEN '${startDate}' AND '${endDate}' AND` : ""}
+        ${keyword ? `(
+            c.message::text ~* '${keyword}' 
+            OR c.post_id::text ~* '${keyword}'
+            OR c.user_uid::text ~* '${keyword}'
+            OR c.username::text ~* '${keyword}'
+            OR c.phone_number::text ~* '${keyword}'
+          )` : "1=1"};
+    `
+    const [responseSelect, resCount] = await Promise.all([
+      this.connection.query(querySelect),
+      this.connection.query(queryCount),
+    ]);
+
     return {
-      data: response,
-      totalCount: response.length > 0 ? response[0].totalCount : 0,
+      data: responseSelect,
+      totalCount: responseSelect.length > 0 ? resCount[0].totalCount : 0,
     }
   }
 
