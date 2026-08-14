@@ -17,6 +17,11 @@ export enum LEVEL {
   USER = 0
 }
 
+export enum ILanguage {
+  VI = 'vi',
+  EN = 'en'
+}
+
 @Entity({ name: 'users' })
 export class UserEntity {
   @PrimaryGeneratedColumn()
@@ -30,6 +35,9 @@ export class UserEntity {
   
   @Column({ default: LEVEL.USER })
   level?: LEVEL;
+
+  @Column({ default: ILanguage.VI })
+  language?: ILanguage;
 
   @Column()
   balance: number

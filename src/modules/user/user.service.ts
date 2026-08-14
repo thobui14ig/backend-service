@@ -87,6 +87,7 @@ export class UserService {
         'user.id',
         'user.username',
         'user.level',
+        'user.language',
         'user.balance',
         'user.planId',
         'user.expiredAt',
@@ -130,6 +131,7 @@ export class UserService {
         typeConfig: true,
         discountAmount: true,
         maxPage: true,
+        language: true
       }
     })
 
