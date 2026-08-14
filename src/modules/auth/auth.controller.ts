@@ -13,6 +13,7 @@ import { Public } from 'src/common/guard/guard';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { getSidFromRequest } from 'src/common/utils/auth';
+import { Throttle } from '@nestjs/throttler';
 
 @Controller('auth')
 @Public()
@@ -21,6 +22,12 @@ export class AuthController {
 
   @HttpCode(HttpStatus.OK)
   @Post('login')
+  @Throttle({
+    default: {
+      limit: 10,
+      ttl: 60_000,
+    },
+  })
   async signIn(
     @Body() signInDto: LoginDto,
     @Res()
@@ -38,15 +45,4 @@ export class AuthController {
     delete response.token;
     return res.send(response);
   }
-
-  // @Post('refresh-token')
-  // async refreshToken(
-  //   @Body() body: { refreshToken: string },
-  //   @Req() request: Request,
-  //   @Res()
-  //   res: Response,
-  // ) {
-  //   const sid = getSidFromRequest(request)
-  //   return this.authService.refreshToken(sid, res);
-  // }
 }

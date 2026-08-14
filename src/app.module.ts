@@ -43,6 +43,7 @@ import { TransactionModule } from './modules/transaction/transaction.module';
 import { UserModule } from './modules/user/user.module';
 import { UserTiktokModule } from './modules/user-tiktok/user-tiktok.module';
 import { UserTiktokEntity } from './modules/user-tiktok/entities/page.entity';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
   imports: [
@@ -53,6 +54,12 @@ import { UserTiktokEntity } from './modules/user-tiktok/entities/page.entity';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60_000, 
+        limit: 100,  
+      },
+    ]),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -118,6 +125,10 @@ import { UserTiktokEntity } from './modules/user-tiktok/entities/page.entity';
     {
       provide: APP_GUARD,
       useClass: RolesGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
     },
   ],
 })

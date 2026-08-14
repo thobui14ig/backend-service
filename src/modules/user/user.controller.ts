@@ -6,6 +6,7 @@ import { getUser } from 'src/common/utils/user';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Role, Roles } from 'src/common/decorators/roles.decorator';
 import { Public } from 'src/common/guard/guard';
+import { Throttle } from '@nestjs/throttler';
 
 @Controller('users')
 export class UserController {
@@ -13,6 +14,12 @@ export class UserController {
 
   @Post()
   @Public()
+  @Throttle({
+    default: {
+      limit: 1,
+      ttl: 10_000,
+    },
+  })
   create(@Body() createUserDto: CreateUserDto) {
     return this.userService.create(createUserDto);
   }
