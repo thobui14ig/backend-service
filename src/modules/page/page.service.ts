@@ -64,6 +64,7 @@ export class PageService {
       p.page_id as "pageId",
       p.name,
       p.is_active as "isActive",
+      p.created_at::TEXT AS "createdAt",
       u.username as "username",
       COUNT(l.id) AS "totalLink" 
       from page p
