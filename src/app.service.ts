@@ -53,12 +53,34 @@ export class AppService {
 
             'link', (
                 SELECT jsonb_build_object(
-                    'die', COUNT(*) FILTER (WHERE type = 'die'),
-                    'undefined', COUNT(*) FILTER (WHERE type = 'undefined'),
-                    'live', COUNT(*) FILTER (WHERE type IN ('public', 'private'))
+                    'die', COUNT(*) FILTER (WHERE links.type = 'die'),
+                    'undefined', COUNT(*) FILTER (WHERE links.type = 'undefined'),
+                    'live', COUNT(*) FILTER (WHERE links.type IN ('public', 'private')),
+                    'users', (
+                        SELECT jsonb_agg(
+                            jsonb_build_object(
+                                'id', x.id,
+                                'name', x.username,
+                                'totalLink', x.total_link
+                            )
+                        )
+                        FROM (
+                            SELECT 
+                                u.id,
+                                u.username,
+                                COUNT(l.id) AS total_link
+                            FROM links l
+                            JOIN users u ON u.id = l.user_id
+                            WHERE l.is_deleted = false
+                            AND u.is_active = true
+                            GROUP BY u.id
+                        ) x
+                    )
                 )
-                FROM links 
-                join users u on u.id = links.user_id and u.is_active = true
+                FROM links
+                JOIN users u 
+                    ON u.id = links.user_id 
+                    AND u.is_active = true
                 WHERE links.is_deleted = false ${user.level === LEVEL.USER ? `and links.user_id = ${user.id}` : ""}
             ),
 
