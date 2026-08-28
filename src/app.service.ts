@@ -52,36 +52,37 @@ export class AppService {
             ),
 
             'link', (
-                SELECT jsonb_build_object(
-                    'die', COUNT(*) FILTER (WHERE links.type = 'die'),
-                    'undefined', COUNT(*) FILTER (WHERE links.type = 'undefined'),
-                    'live', COUNT(*) FILTER (WHERE links.type IN ('public', 'private')),
-                    'users', (
-                        SELECT jsonb_agg(
-                            jsonb_build_object(
-                                'id', x.id,
-                                'name', x.username,
-                                'totalLink', x.total_link
-                            )
+              SELECT jsonb_build_object(
+                'die', COUNT(*) FILTER (WHERE links.type = 'die'),
+                'undefined', COUNT(*) FILTER (WHERE links.type = 'undefined'),
+                'live', COUNT(*) FILTER (WHERE links.type IN ('public', 'private')),
+                'users', (
+                    SELECT jsonb_agg(
+                        jsonb_build_object(
+                            'id', x.id,
+                            'name', x.username,
+                            'totalLink', x.total_link
                         )
-                        FROM (
-                            SELECT 
-                                u.id,
-                                u.username,
-                                COUNT(l.id) AS total_link
-                            FROM links l
-                            JOIN users u ON u.id = l.user_id
-                            WHERE l.is_deleted = false
-                            AND u.is_active = true
-                            GROUP BY u.id
-                        ) x
+                        ORDER BY x.total_link DESC
                     )
+                    FROM (
+                        SELECT 
+                            u.id,
+                            u.username,
+                            COUNT(l.id) AS total_link
+                        FROM links l
+                        JOIN users u ON u.id = l.user_id
+                        WHERE l.is_deleted = false
+                        AND u.is_active = true
+                        GROUP BY u.id, u.username
+                    ) x
                 )
-                FROM links
-                JOIN users u 
-                    ON u.id = links.user_id 
-                    AND u.is_active = true
-                WHERE links.is_deleted = false ${user.level === LEVEL.USER ? `and links.user_id = ${user.id}` : ""}
+            )
+            FROM links
+            JOIN users u 
+                ON u.id = links.user_id 
+                AND u.is_active = true
+            WHERE links.is_deleted = false ${user.level === LEVEL.USER ? `and links.user_id = ${user.id}` : ""}
             ),
 
             'proxy', (
@@ -151,6 +152,7 @@ export class AppService {
             delete res[0].data.proxy
             delete res[0].data.token
             delete res[0].data.transaction
+            delete res[0].data.link.users
         }
 
         return res[0].data
@@ -304,10 +306,10 @@ export class AppService {
             }
 
             if (
-            result?.status === "error" &&
-            result?.code === "UNAUTHORIZED"
+                result?.status === "error" &&
+                result?.code === "UNAUTHORIZED"
             ) {
-            return "error";
+                return "error";
             }
 
             return null;
