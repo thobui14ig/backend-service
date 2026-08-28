@@ -98,7 +98,7 @@ export class UserService {
       .loadRelationCountAndMap('user.totalLink', 'user.links')
       .loadRelationCountAndMap('user.totalPage', 'user.pages')
       .andWhere("user.username != :name", { name: "test" })
-      .orderBy("id", "ASC")
+      .orderBy("is_active", "DESC")
       .getMany();
   }
 
