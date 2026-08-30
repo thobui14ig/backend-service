@@ -26,14 +26,13 @@ export class CheckLimitLinkUserWhenAddLinkInterceptor implements NestInterceptor
                 HttpStatus.BAD_REQUEST,
             );
         }
-        const plan = getPlan(userFromDb.planId, user.id)
         const totalLinkFromDb = await this.linkService.getTotalLinkUserByStatus(user["id"])
         const totalLink = totalLinkFromDb + request.body.links.length
 
         if (userFromDb && !isNullOrUndefined(totalLink)) {
-            if (totalLink > plan.maxLinks) {
+            if (totalLink > userFromDb.totalLink) {
                 throw new HttpException(
-                    `Vượt quá số link gói đang mua. Chỉ có thể thêm ${plan.maxLinks-totalLinkFromDb}`,
+                    `Vượt quá số link gói đang mua`,
                     HttpStatus.BAD_REQUEST,
                 );
             }
