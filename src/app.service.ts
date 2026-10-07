@@ -74,6 +74,13 @@ export class AppService {
                         JOIN users u ON u.id = l.user_id
                         WHERE l.is_deleted = false
                         AND u.is_active = true
+                        AND (
+                            l.page_id IS NULL
+                            OR (
+                                l.page_id IS NOT NULL
+                                AND l.created_at >= NOW() - INTERVAL '24 hours'
+                            )
+                        )
                         GROUP BY u.id, u.username
                     ) x
                 )
