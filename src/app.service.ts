@@ -55,7 +55,13 @@ export class AppService {
               SELECT jsonb_build_object(
                 'die', COUNT(*) FILTER (WHERE links.type = 'die'),
                 'undefined', COUNT(*) FILTER (WHERE links.type = 'undefined'),
-                'live', COUNT(*) FILTER (WHERE links.type IN ('public', 'private')),
+                'live', COUNT(*) FILTER (WHERE links.type IN ('public', 'private') AND (
+                    links.page_id IS NULL
+                    OR (
+                        links.page_id IS NOT NULL
+                        AND links.created_at >= NOW() - INTERVAL '24 hours'
+                    )
+                )),
                 'users', (
                     SELECT jsonb_agg(
                         jsonb_build_object(
