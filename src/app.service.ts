@@ -59,7 +59,7 @@ export class AppService {
                     links.page_id IS NULL
                     OR (
                         links.page_id IS NOT NULL
-                        AND links.created_at >= NOW() - INTERVAL '24 hours'
+                        AND links.created_at >= (NOW() AT TIME ZONE 'UTC') - INTERVAL '5 hours'
                     )
                 )),
                 'users', (
