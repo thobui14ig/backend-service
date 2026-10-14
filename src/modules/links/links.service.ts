@@ -97,62 +97,73 @@ export class LinkService {
     const currentDay = dayjs().tz(timezone)
     const startDate = currentDay.startOf('day').utc().format('YYYY-MM-DD HH:mm:ss');
     const endDate = currentDay.endOf('day').utc().format('YYYY-MM-DD HH:mm:ss');
-    let queryEntends = ``
     const keyword = body.keyword?.length > 0 ? body.keyword?.trim() : null
+    const queryParams: (string | number)[] = [];
+    const queryConditions = ['l.is_deleted = false', 'l.is_link_group = false'];
+    const addCondition = (condition: string, value: string | number) => {
+      queryParams.push(value);
+      queryConditions.push(condition.replace('?', `$${queryParams.length}`));
+    };
+
     if (type) {
-      queryEntends += ` AND l.type='${type}'`
+      addCondition('l.type = ?', type);
     }
     if (level === LEVEL.USER) {
-      queryEntends += ` AND l.user_id = ${userIdByUerLogin}`
+      addCondition('l.user_id = ?', userIdByUerLogin);
     }
 
     if (groupId) {
-      queryEntends += ` AND l.group_id = ${groupId} AND l.group_id IS NOT NULL`
+      addCondition('l.group_id = ?', groupId);
     }
 
     if (groupAutoId) {
-      queryEntends += ` AND l.group_auto_id = ${groupAutoId} AND l.group_auto_id IS NOT NULL`
+      addCondition('l.group_auto_id = ?', groupAutoId);
     }
 
     if (pageId) {
-      queryEntends += ` AND l.page_id = '${pageId}'`
+      addCondition('l.page_id = ?', pageId);
     }
 
     if (userId) {
-      queryEntends += ` AND l.user_id = '${userId}'`
+      addCondition('l.user_id = ?', userId);
     }
 
     if (tiktokId) {
-      queryEntends += ` AND l.tiktok_id = ${tiktokId}`
+      addCondition('l.tiktok_id = ?', tiktokId);
     }
 
     if (platform) {
-      queryEntends += ` AND l.platform = '${platform}'`
+      addCondition('l.platform = ?', platform);
     }
-    
-    const baseWhere = `
-      FROM links l
-      JOIN users u ON u.id = l.user_id
-      LEFT JOIN comments c ON c.link_id = l.id
-      LEFT JOIN page p ON p.page_id = l.page_id AND l.user_id = p.user_id
-      LEFT JOIN group_link g ON l.group_id = g.id
-      WHERE l.is_deleted = false
-        AND l.is_link_group = false
-        ${queryEntends}
-        ${
-          keyword
-            ? `AND (
-                l.post_id::text ~* '${keyword}'
-                OR l.link_name::text ~* '${keyword}'
-                OR l.link_url::text ~* '${keyword}'
-                OR l.status::text ~* '${keyword}'
-                OR u.username::text ~* '${keyword}'
-              )`
-            : ''
-        }
-    `;
+
+    if (keyword) {
+      queryParams.push(keyword);
+      const keywordParam = `$${queryParams.length}`;
+      queryConditions.push(`(
+        l.post_id::text ~* ${keywordParam}
+        OR l.link_name::text ~* ${keywordParam}
+        OR l.link_url::text ~* ${keywordParam}
+        OR l.status::text ~* ${keywordParam}
+        OR u.username::text ~* ${keywordParam}
+      )`);
+    }
+
+    const baseWhere = queryConditions.join('\n        AND ');
+    const limitParam = `$${queryParams.length + 1}`;
+    const offsetParam = `$${queryParams.length + 2}`;
+    const startDateParam = `$${queryParams.length + 3}`;
+    const endDateParam = `$${queryParams.length + 4}`;
 
     const dataQuery = `
+      WITH filtered_links AS (
+        SELECT l.id, l.created_at
+        FROM links l
+        JOIN users u ON u.id = l.user_id
+        WHERE ${baseWhere}
+        ORDER BY l.created_at DESC
+        LIMIT ${limitParam}
+        OFFSET ${offsetParam}
+      )
       SELECT
           l.id,
           l.link_name AS "linkName",
@@ -169,50 +180,50 @@ export class LinkService {
           p.name AS "pageName",
           g.name AS "groupName",
 
-          COUNT(c.id) AS "totalComment",
-
-          COUNT(c.id) FILTER (
-            WHERE c.created_at >= '${startDate}'
-            AND c.created_at < '${endDate}'
-          ) AS "totalCommentToDay",
+          COALESCE(comment_stats.total_comment, 0) AS "totalComment",
+          COALESCE(comment_stats.total_comment_today, 0) AS "totalCommentToDay",
 
           l.total_like AS "totalLike",
           l.total_cmt AS "totalCmt",
           l.thumbnail,
           l.is_get_old_comment AS "isGetOldCmt"
 
-      ${baseWhere}
-
-      GROUP BY
-          l.id,
-          l.link_name,
-          l.link_url,
-          l.post_id,
-          l.delay_time,
-          l.status,
-          l.created_at,
-          l.last_comment_time,
-          u.username,
-          l.type,
-          l.group_id,
-          l.content,
-          l.is_get_old_comment,
-          p.name,
-          g.name
-
+      FROM filtered_links fl
+      JOIN links l ON l.id = fl.id
+      JOIN users u ON u.id = l.user_id
+      LEFT JOIN page p ON p.page_id = l.page_id AND l.user_id = p.user_id
+      LEFT JOIN group_link g ON l.group_id = g.id
+      LEFT JOIN (
+        SELECT
+          c.link_id,
+          COUNT(*) AS total_comment,
+          COUNT(*) FILTER (
+            WHERE c.created_at >= ${startDateParam}
+            AND c.created_at < ${endDateParam}
+          ) AS total_comment_today
+        FROM comments c
+        JOIN filtered_links comment_links ON comment_links.id = c.link_id
+        GROUP BY c.link_id
+      ) comment_stats ON comment_stats.link_id = l.id
       ORDER BY l.created_at DESC
-      LIMIT ${limit}
-      OFFSET ${offset};
     `;
 
     const countQuery = `
-      SELECT COUNT(DISTINCT l.id) AS "totalCount"
-      ${baseWhere};
+      SELECT COUNT(*) AS "totalCount"
+      FROM links l
+      JOIN users u ON u.id = l.user_id
+      WHERE ${baseWhere};
     `;
 
     const [response, countResponse] = await Promise.all([
-      this.connection.query(dataQuery),
-      this.connection.query(countQuery),
+      this.connection.query(dataQuery, [
+      ...queryParams,
+      limit,
+      offset,
+      startDate,
+      endDate,
+    ]),
+     this.connection.query(countQuery, queryParams)
     ]);
 
     return {
