@@ -124,8 +124,8 @@ export class UserEntity {
   @OneToMany(() => PageEntity, (page) => page.user)
   pages: PageEntity[]
 
-  @OneToMany(() => CommentEntity, (comment) => comment.user)
-  comments: CommentEntity[]
+  // @OneToMany(() => CommentEntity, (comment) => comment.user)
+  // comments: CommentEntity[]
 
   @OneToMany(() => CookieEntity, (comment) => comment.cookie)
   cookie: CookieEntity[]

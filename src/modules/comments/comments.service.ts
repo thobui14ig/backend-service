@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as dayjs from 'dayjs';
 import * as timezone from 'dayjs/plugin/timezone';
@@ -7,6 +7,8 @@ import { DataSource, Repository } from 'typeorm';
 import { LEVEL, UserEntity } from '../user/entities/user.entity';
 import { IGetCommentParams } from './comments.service.i';
 import { CommentEntity } from './entities/comment.entity';
+import { UpdateCommentDto } from './dto/update-comment.dto';
+import { LinkService } from '../links/links.service';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -17,6 +19,7 @@ export class CommentsService {
     @InjectRepository(CommentEntity)
     private repo: Repository<CommentEntity>,
     private readonly connection: DataSource,
+    private readonly linkService: LinkService
   ) { }
   async findAll(user: UserEntity, params: IGetCommentParams) {
     const isExport = params.isExport ?? false
@@ -54,6 +57,7 @@ export class CommentsService {
           c.phone_number  AS "phoneNumber",
           c.cmt_id        AS "cmtId",
           c.link_id       AS "linkId",
+          c.order_status AS "orderStatus",
           json_build_object(
               'id', l.id,
               'linkName', l.link_name,
@@ -110,5 +114,47 @@ export class CommentsService {
         id
       }
     })
+  }
+
+  async updateStatus(body: UpdateCommentDto, userId: number) {
+    const comment = await this.repo.findOne({
+      where: {
+        id: body.id
+      }
+    })
+
+    if (comment) {
+      const link = await this.linkService.getOneByUser(comment.linkId, userId)
+      if (link) {
+        return await this.repo.update(
+          { id: body.id },
+          { orderStatus: body.orderStatus, address: body.address, note: body.note },
+        );
+      }
+    }
+    throw new ForbiddenException(
+      'Bạn không có quyền cập nhật link này',
+    );
+  }
+
+  async updateCommentStatus(body: Pick<UpdateCommentDto, 'id' | 'orderStatus'>, userId: number) {
+    const comment = await this.repo.findOne({
+      where: {
+        id: body.id
+      }
+    })
+
+    if (comment) {
+      const link = await this.linkService.getOneByUser(comment.linkId, userId)
+      if (link) {
+        return await this.repo.update(
+          { id: body.id },
+          { orderStatus: body.orderStatus },
+        );
+      }
+    }
+    throw new ForbiddenException(
+      'Bạn không có quyền cập nhật link này',
+    );
   }
 }

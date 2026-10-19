@@ -24,6 +24,13 @@ import { Public } from 'src/common/guard/guard';
 export class LinkController {
   constructor(private readonly linkService: LinkService) { }
 
+
+  @Get('/get-order')
+  getOrder(@Req() req: Request,) {
+    const user = getUser(req);
+    return this.linkService.getOrder(user.id);
+  }
+
   @Post()
   @UseInterceptors(CheckLimitLinkUserWhenAddLinkInterceptor)
   create(@Req() req: Request, @Body() createLinkDto: CreateLinkDTO) {
@@ -86,4 +93,5 @@ export class LinkController {
   }) {
     return this.linkService.insertLinkPublic(body.roomId, body.tiktokId, body.nickname, body.userId);
   }
+
 }

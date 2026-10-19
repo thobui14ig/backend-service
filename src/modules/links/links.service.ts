@@ -92,6 +92,15 @@ export class LinkService {
     });
   }
 
+  getOneByUser(id: number, userId: number) {
+    return this.repo.findOne({
+      where: {
+        id,
+        userId
+      },
+    });
+  }
+
   async getAll(body: BodyLinkQuery, level: LEVEL, userIdByUerLogin: number, isFilter: boolean, limit: number, offset: number, platform: EPlatform) {
     const { type, groupId, groupAutoId, timezone, pageId, userId, tiktokId } = body
     const currentDay = dayjs().tz(timezone)
@@ -407,5 +416,44 @@ export class LinkService {
     } catch (error) {
       return null;
     }
+  }
+
+
+  getOrder(userId: number) {
+    return this.connection.query(`
+        SELECT
+        l.id,
+        l.link_name AS "linkName",
+        l.post_id AS "postId",
+        l.created_at::TEXT AS "createdAt",
+        COALESCE(
+            jsonb_agg(
+                jsonb_build_object(
+                    'id', c.id,
+                    'postId', c.post_id,
+                    'userUid', c.user_uid,
+                    'username', c.username,
+                    'message', c.message,
+                    'createdAt', c.created_at::TEXT,
+                    'phoneNumber', c.phone_number,
+                    'cmtId', c.cmt_id,
+                    'address', c.address,
+                    'note', c.note
+                )
+                ORDER BY c.created_at DESC
+            ) FILTER (WHERE c.id IS NOT NULL),
+            '[]'::jsonb
+        ) AS comments
+    FROM links l
+    JOIN comments c ON c.link_id = l.id
+    WHERE l.user_id = 82
+      AND c.order_status = 'success'
+    GROUP BY
+        l.id,
+        l.link_name,
+        l.post_id,
+        l.created_at
+    ORDER BY l.created_at DESC;  
+    `)
   }
 }
