@@ -445,8 +445,8 @@ export class LinkService {
             '[]'::jsonb
         ) AS comments
     FROM links l
-    JOIN comments c ON c.link_id = l.id
-    WHERE l.user_id = 82
+    LEFT JOIN comments c ON c.link_id = l.id
+    WHERE l.user_id = ${userId}
       AND c.order_status = 'success'
     GROUP BY
         l.id,
