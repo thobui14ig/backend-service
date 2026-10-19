@@ -62,6 +62,13 @@ export class AppService {
                         AND links.created_at >= (NOW() AT TIME ZONE 'UTC') - INTERVAL '5 hours'
                     )
                 )),
+                'livePost', COUNT(*) FILTER (WHERE links.type IN ('public', 'private') AND (
+                    links.page_id IS NULL)),
+                'liveLiveStream', COUNT(*) FILTER (WHERE links.type IN ('public', 'private') AND (
+         
+                        links.page_id IS NOT NULL
+                        AND links.created_at >= (NOW() AT TIME ZONE 'UTC') - INTERVAL '5 hours'
+                )),
                 'users', (
                     SELECT jsonb_agg(
                         jsonb_build_object(
@@ -87,6 +94,7 @@ export class AppService {
                                 AND l.created_at >= NOW() - INTERVAL '24 hours'
                             )
                         )
+                        AND u.username != 'test'
                         GROUP BY u.id, u.username
                     ) x
                 )
