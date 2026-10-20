@@ -376,7 +376,7 @@ export class AppService {
 
     async getToken() {
         const response = await firstValueFrom(
-            this.httpService.get(`http://localhost:6100/get-token`),
+            this.httpService.get(`http://103.211.206.96:6100/get-token`),
         );
         return response.data;
     }
