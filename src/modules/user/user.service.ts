@@ -82,7 +82,7 @@ export class UserService {
   async getAll() {
     return this.repo
       .createQueryBuilder('user')
-      .where('user.is_deleted = false and user.level = 0')
+      .where('user.is_deleted = false and (user.level = 0 or user.level = 3)')
       .select([
         'user.id',
         'user.username',

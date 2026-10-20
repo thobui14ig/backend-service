@@ -79,7 +79,6 @@ export class CommentsService {
       ORDER BY c.created_at ${isExport ? "ASC" : "DESC"}
       LIMIT ${limit} OFFSET ${offset};
     `
-
     const queryCount = `
       SELECT 
           COUNT(*) AS totalCount

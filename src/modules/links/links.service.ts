@@ -117,7 +117,7 @@ export class LinkService {
     if (type) {
       addCondition('l.type = ?', type);
     }
-    if (level === LEVEL.USER) {
+    if (level === LEVEL.USER || level === LEVEL.SUB_USER) {
       addCondition('l.user_id = ?', userIdByUerLogin);
     }
 
