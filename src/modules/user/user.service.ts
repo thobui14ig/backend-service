@@ -1,8 +1,8 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { BadRequestException, HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UserEntity } from './entities/user.entity';
+import { LEVEL, UserEntity } from './entities/user.entity';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as dayjs from 'dayjs';
 import * as timezone from 'dayjs/plugin/timezone';
@@ -162,5 +162,89 @@ export class UserService {
       UPDATE users
       SET last_active_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC'
       WHERE id = ${userId};`)
+  }
+
+
+  getSubUsers(userId: number) {
+    return this.repo
+      .createQueryBuilder('user')
+      .where('user.is_deleted = false and user.level = 3')
+      .select([
+        'user.id',
+        'user.username',
+        'user.language',
+        'user.balance',
+        'user.planId',
+        'user.expiredAt',
+        'user.isActive',
+        'user.isGetPhone',
+        'user.lastActiveAt',
+      ])
+      .andWhere("user.parentId = :userId", { userId })
+      .orderBy("id", "DESC")
+      .getMany();
+  }
+
+  async renewService(targetUserId: number, ownerUserId: number) {
+    if (!Number.isInteger(targetUserId)) {
+      throw new BadRequestException('userId không hợp lệ.');
+    }
+
+    const renewalPrice = 100000;
+
+    return this.connection.transaction(async (manager) => {
+      const owner = await manager.findOne(UserEntity, {
+        where: { id: ownerUserId, isDelete: false },
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      if (!owner) {
+        throw new BadRequestException('Tài khoản không tồn tại.');
+      }
+
+      const targetUser = await manager.findOne(UserEntity, {
+        where: {
+          id: targetUserId,
+          parentId: ownerUserId,
+          isDelete: false,
+        },
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      if (!targetUser) {
+        throw new BadRequestException('User không phải cấp dưới của bạn.');
+      }
+
+      if (owner.balance < renewalPrice) {
+        throw new BadRequestException('Bạn không đủ tiền!');
+      }
+
+      const now = dayjs().utc();
+      const expiration = targetUser.expiredAt ? dayjs.utc(targetUser.expiredAt) : null;
+      const renewalBase = expiration?.isValid() && expiration.isAfter(now) ? expiration : now;
+      const renewedExpiredAt = renewalBase.add(1, 'month').format('YYYY-MM-DD HH:mm:ss');
+
+      await manager
+        .createQueryBuilder()
+        .update(UserEntity)
+        .set({
+          balance: () => `"balance" - ${renewalPrice}`,
+          expiredAt: renewedExpiredAt,
+        })
+        .where('id = :id', { id: ownerUserId })
+        .execute();
+
+      await manager.update(UserEntity, targetUserId, {
+        planId: 1,
+        isActive: true,
+        expiredAt: renewedExpiredAt,
+      });
+
+      return {
+        message: 'Gia hạn dịch vụ thành công.',
+        balance: owner.balance - renewalPrice,
+        expiredAt: renewedExpiredAt,
+      };
+    });
   }
 }

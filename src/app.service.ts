@@ -49,7 +49,7 @@ export class AppService {
                     )
                 )
                 FROM comments c
-                join links l on l.id = c.link_id ${user.level === LEVEL.USER ? `and l.user_id = ${user.id}` : ""}
+                join links l on l.id = c.link_id ${user.level === LEVEL.ADMIN ? '' : `and l.user_id = ${user.id}`}
                 join users u on u.id = l.user_id
             ),
 
@@ -105,7 +105,7 @@ export class AppService {
             JOIN users u 
                 ON u.id = links.user_id 
                 AND u.is_active = true
-            WHERE links.is_deleted = false ${user.level === LEVEL.USER ? `and links.user_id = ${user.id}` : ""}
+            WHERE links.is_deleted = false ${user.level === LEVEL.ADMIN ?  '' : `and links.user_id = ${user.id}`}
             ),
 
             'proxy', (

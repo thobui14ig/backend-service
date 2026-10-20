@@ -7,6 +7,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { Role, Roles } from 'src/common/decorators/roles.decorator';
 import { Public } from 'src/common/guard/guard';
 import { Throttle } from '@nestjs/throttler';
+import { LEVEL } from './entities/user.entity';
 
 @Controller('users')
 export class UserController {
@@ -24,10 +25,32 @@ export class UserController {
     return this.userService.create(createUserDto);
   }
 
+  @Post('sub-user')
+  @Throttle({
+    default: {
+      limit: 1,
+      ttl: 10_000,
+    },
+  })
+  createSubUser(@Body() createUserDto: CreateUserDto, @Req() req: Request) {
+    const user = getUser(req);
+    const input = {
+      ...createUserDto,
+      parentId: user.level == LEVEL.RESELLER ? user.id : undefined
+    }
+    return this.userService.create(input);
+  }
+
   @Get('')
   @Roles(Role.ADMIN)
   getUsers() {
     return this.userService.getAll()
+  }
+
+  @Get('sub-users')
+  getSubUsers(@Req() req: Request) {
+    const user = getUser(req);
+    return this.userService.getSubUsers(user.id)
   }
 
   @Get('/info')
@@ -59,4 +82,11 @@ export class UserController {
     const user = getUser(req);
     return this.userService.changePass(dto, user.id);
   }
+
+  @Post('renew-service')
+  renewService(@Body() dto: { userId: number }, @Req() req: Request) {
+    const user = getUser(req);
+    return this.userService.renewService(dto.userId, user.id);
+  }
+
 }

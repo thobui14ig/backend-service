@@ -1,3 +1,7 @@
+import { CookieEntity } from 'src/modules/cookie/entities/cookie.entity';
+import { GroupEntity } from 'src/modules/group/entities/group.entity';
+import { OrderEntity } from 'src/modules/order/entities/order.entity';
+import { PageEntity } from 'src/modules/page/entities/page.entity';
 import {
   Column,
   CreateDateColumn,
@@ -6,15 +10,12 @@ import {
   PrimaryGeneratedColumn
 } from 'typeorm';
 import { LinkEntity } from '../../links/entities/links.entity';
-import { CommentEntity } from 'src/modules/comments/entities/comment.entity';
-import { CookieEntity } from 'src/modules/cookie/entities/cookie.entity';
-import { OrderEntity } from 'src/modules/order/entities/order.entity';
-import { GroupEntity } from 'src/modules/group/entities/group.entity';
-import { PageEntity } from 'src/modules/page/entities/page.entity';
 
 export enum LEVEL {
   ADMIN = 1,
-  USER = 0
+  USER = 0,
+  RESELLER = 2,
+  SUB_USER = 3,  
 }
 
 export enum ILanguage {
@@ -114,6 +115,9 @@ export class UserEntity {
 
   @Column({ default: 0, name: 'type_config' })
   typeConfig: number
+
+  @Column({ default: 0, name: 'parent_id' })
+  parentId: number
 
   @Column({ default: false, name: 'is_get_phone' })
   isGetPhone: Boolean;
