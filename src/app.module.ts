@@ -44,6 +44,7 @@ import { UserModule } from './modules/user/user.module';
 import { UserTiktokModule } from './modules/user-tiktok/user-tiktok.module';
 import { UserTiktokEntity } from './modules/user-tiktok/entities/page.entity';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [
@@ -60,6 +61,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
         limit: 1000,  
       },
     ]),
+    HttpModule,
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

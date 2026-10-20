@@ -55,9 +55,9 @@ export class AppController {
   }
 
   @Public()
-  @Post('/convert-uid')
-  convertUid(@Body() body: { uid: string }) {
-    return this.appService.convertUid(body.uid)
+  @Post('/convert-uids')
+  convertUid(@Body() body: { uids: string[] }) {
+    return this.appService.convertUid(body.uids)
   }
 
   @Public()

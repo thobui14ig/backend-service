@@ -7,6 +7,8 @@ import { DataSource } from 'typeorm';
 import { DashboardStats, RequestSong } from './app.controller.i';
 import { ProxyService } from './modules/proxy/proxy.service';
 import { LEVEL, UserEntity } from './modules/user/entities/user.entity';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -22,7 +24,7 @@ export enum LoadResource {
 
 @Injectable()
 export class AppService {
-    constructor(private connection: DataSource, private proxyService: ProxyService) {}
+    constructor(private connection: DataSource, private proxyService: ProxyService, private readonly httpService: HttpService,) {}
 
     async getDashboardStats(user: UserEntity, timezone: string): Promise<DashboardStats> {
         const currentDay = dayjs().tz(timezone)
@@ -266,9 +268,9 @@ export class AppService {
         `)
     }
 
-    convertUid(uid: string) {
-        return this.callApi(uid)
-    }
+    // convertUid(uid: string) {
+    //     return this.callApi(uid)
+    // }
 
     async loadFbNumber() {
         const fbNumbers = await this.connection.query(`
@@ -277,66 +279,105 @@ export class AppService {
         return fbNumbers[0]
     }
 
-    async callApi(uid: string, retry = 3): Promise<string | number | null> {
-        try {
-            // const proxy = await this.proxyService.getRandomProxy();
-            // if (!proxy) return "error";
+    // async callApi(uid: string, retry = 3): Promise<string | number | null> {
+    //     try {
+    //         // const proxy = await this.proxyService.getRandomProxy();
+    //         // if (!proxy) return "error";
 
-            const fbNumber = await this.loadFbNumber();
-            if (!fbNumber) return "error";
+    //         const fbNumber = await this.loadFbNumber();
+    //         if (!fbNumber) return "error";
 
-            // const httpsAgent = getHttpAgent(proxy);
+    //         // const httpsAgent = getHttpAgent(proxy);
 
-            const res = await fetch(
-            `https://api.fbnumber.com/v1/phone/find-info-by-phone?searchPhone=${uid}`,
-            {
-                // agent: httpsAgent,
-                method: "GET",
-                headers: {
-                accept: "application/json, text/plain, */*",
+    //         const res = await fetch(
+    //         `https://api.fbnumber.com/v1/phone/find-info-by-phone?searchPhone=${uid}`,
+    //         {
+    //             // agent: httpsAgent,
+    //             method: "GET",
+    //             headers: {
+    //             accept: "application/json, text/plain, */*",
+    //             "accept-language": "en-US,en;q=0.9",
+    //             authorization: String(fbNumber.value),
+    //             priority: "u=1, i",
+    //             "sec-ch-ua":
+    //                 '"Not;A=Brand";v="8", "Chromium";v="150", "Google Chrome";v="150"',
+    //             "sec-ch-ua-mobile": "?0",
+    //             "sec-ch-ua-platform": '"macOS"',
+    //             "sec-fetch-dest": "empty",
+    //             "sec-fetch-mode": "cors",
+    //             "sec-fetch-site": "same-site",
+    //             "x-lang": "en",
+    //             Referer: "https://app.fbnumber.com/",
+    //             },
+    //         }
+    //         );
+
+    //         const result = (await res.json()) as any;
+
+    //         if (result?.status === "success" && result?.data?.number) {
+    //         return result.data.number;
+    //         }
+
+    //         if (result?.status === "error" && result?.code === "429") {
+    //         if (retry > 0) {
+    //             console.log(`429 - retry ${4 - retry}/3`);
+    //             await new Promise((resolve) => setTimeout(resolve, 1000)); // đợi 1s
+    //             return this.callApi(uid, retry - 1);
+    //         }
+
+    //         return 429;
+    //         }
+
+    //         if (
+    //             result?.status === "error" &&
+    //             result?.code === "UNAUTHORIZED"
+    //         ) {
+    //             return "error";
+    //         }
+
+    //         return null;
+    //     } catch (error) {
+    //         console.log(error);
+    //         return "error";
+    //     }
+    // }
+
+    async convertUid(uids: string[]) {
+        const result = uids.join('%0A');
+        const token = await this.getToken()
+
+        return fetch("https://uidphone.com/convert-uid-to-phone-multi", {
+            "headers": {
+                "accept": "*/*",
                 "accept-language": "en-US,en;q=0.9",
-                authorization: String(fbNumber.value),
-                priority: "u=1, i",
-                "sec-ch-ua":
-                    '"Not;A=Brand";v="8", "Chromium";v="150", "Google Chrome";v="150"',
-                "sec-ch-ua-mobile": "?0",
-                "sec-ch-ua-platform": '"macOS"',
-                "sec-fetch-dest": "empty",
-                "sec-fetch-mode": "cors",
-                "sec-fetch-site": "same-site",
-                "x-lang": "en",
-                Referer: "https://app.fbnumber.com/",
+                "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
+                "priority": "u=1, i",
+                "x-requested-with": "XMLHttpRequest",
+                "cookie": "ci_session=ktg85gn39h8fnln1mlovcd9p7cle4nt6; request_number=5",
+                "Referer": "https://uidphone.com/scan-multi"
                 },
-            }
-            );
+            "body": `name=abc&type=uid2phone&method=from_uids&uids=${result}&fileuids=&_token=${token}`,
+                "method": "POST"
+                }).then(async (res) => {
+                    const response: any = await res.json()
+                    const map = {};
 
-            const result = (await res.json()) as any;
+                    (response.result as string??"")
+                        .trim()
+                        .split('\n')
+                        .forEach(line => {
+                            const [uid, phone] = line.split('|');
+                            map[uid] = phone;
+                        });
+                    return map
+                })
+                
+    }
 
-            if (result?.status === "success" && result?.data?.number) {
-            return result.data.number;
-            }
-
-            if (result?.status === "error" && result?.code === "429") {
-            if (retry > 0) {
-                console.log(`429 - retry ${4 - retry}/3`);
-                await new Promise((resolve) => setTimeout(resolve, 1000)); // đợi 1s
-                return this.callApi(uid, retry - 1);
-            }
-
-            return 429;
-            }
-
-            if (
-                result?.status === "error" &&
-                result?.code === "UNAUTHORIZED"
-            ) {
-                return "error";
-            }
-
-            return null;
-        } catch (error) {
-            console.log(error);
-            return "error";
-        }
+    async getToken() {
+        const response = await firstValueFrom(
+            this.httpService.get(`http://localhost:6100/get-token`),
+        );
+        return response.data;
     }
 }
