@@ -194,6 +194,12 @@ export class OrderService {
         amount,
         status: 'confirmed',
       });
+      const transaction: CreateTransactionDto = {
+        type: TransactionType.INCOME,
+        note: `Nạp tiền từ ${user.username}`,
+        amount: amount
+      }
+      await this.transactionService.insert(transaction)
 
       return result;
     });
