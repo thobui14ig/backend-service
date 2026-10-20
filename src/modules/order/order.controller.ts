@@ -4,6 +4,7 @@ import { getUser } from "src/common/utils/user";
 import { OrderService } from "./order.service";
 import { Role, Roles } from "src/common/decorators/roles.decorator";
 import { BuyVipDto, ConfirmDto, CreateOrderDto } from "./order.controller.i";
+import { Public } from "src/common/guard/guard";
 
 @Controller('orders')
 export class OrderController {
@@ -31,5 +32,11 @@ export class OrderController {
   orderVip(@Req() req: Request, @Body() body: BuyVipDto) {
     const user = getUser(req);
     return this.orderService.buyVip(body, user.id)
+  }
+
+  @Post("/bidv-confirm")
+  @Public()
+  bidvConfirm(@Req() req: Request, @Body() body) {
+    console.log(body)
   }
 }
