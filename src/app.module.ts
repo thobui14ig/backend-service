@@ -45,6 +45,7 @@ import { UserTiktokModule } from './modules/user-tiktok/user-tiktok.module';
 import { UserTiktokEntity } from './modules/user-tiktok/entities/page.entity';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { HttpModule } from '@nestjs/axios';
+import { BidvNotiEntity } from './modules/order/entities/bidv-noti.entity';
 
 @Module({
   imports: [
@@ -86,7 +87,8 @@ import { HttpModule } from '@nestjs/axios';
           PhoneCustomerEntity,
           GroupEntity,
           PageEntity,
-          UserTiktokEntity
+          UserTiktokEntity,
+          BidvNotiEntity
         ],
         // logging: true,
         // synchronize: true, // chỉ dùng trong dev!

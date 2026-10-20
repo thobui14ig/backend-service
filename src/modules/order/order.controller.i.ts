@@ -14,3 +14,15 @@ export class BuyVipDto {
     @IsNumber()
     planId: number
 }
+
+export class BidvConfirm {
+    content: string
+    code: string
+    amount: string;
+}
+
+export class BidvConfirmRefactor {
+    userId: number
+    code: string
+    amount: number;
+}

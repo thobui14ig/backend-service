@@ -14,8 +14,8 @@ export class OrderEntity {
     @Column()
     status?: OrderStatus;
 
-    @Column()
-    content: number;
+    @Column({ type: 'varchar', length: 255 })
+    content: string;
 
     @Column()
     amount?: number

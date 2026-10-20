@@ -3,7 +3,7 @@ import { Request } from "express";
 import { getUser } from "src/common/utils/user";
 import { OrderService } from "./order.service";
 import { Role, Roles } from "src/common/decorators/roles.decorator";
-import { BuyVipDto, ConfirmDto, CreateOrderDto } from "./order.controller.i";
+import { BidvConfirm, BuyVipDto, ConfirmDto, CreateOrderDto } from "./order.controller.i";
 import { Public } from "src/common/guard/guard";
 
 @Controller('orders')
@@ -36,7 +36,15 @@ export class OrderController {
 
   @Post("/bidv-confirm")
   @Public()
-  bidvConfirm(@Req() req: Request, @Body() body) {
-    console.log(body)
+  bidvConfirm(@Req() req: Request, @Body() body: BidvConfirm) {
+    const input = {
+      ...body,
+      userId: Number(body.content),
+      amount: typeof body.amount === 'string'
+        ? Number(body.amount.replace(/[+, \s]|VND/g, ''))
+        : body.amount
+    }
+
+    return this.orderService.bidvConfirm(input)
   }
 }
