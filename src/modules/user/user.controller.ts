@@ -86,7 +86,12 @@ export class UserController {
   @Post('renew-service')
   renewService(@Body() dto: { userId: number }, @Req() req: Request) {
     const user = getUser(req);
-    return this.userService.renewService(dto.userId, user.id);
+    return this.userService.renewServiceForReseller(dto.userId, user.id);
   }
 
+  @Post('renew-service-user')
+  renewServiceForUser(@Req() req: Request) {
+    const user = getUser(req);
+    return this.userService.renewServiceForUser(user.id);
+  }
 }

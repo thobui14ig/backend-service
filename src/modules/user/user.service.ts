@@ -4,6 +4,7 @@ import { DataSource, Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { LEVEL, UserEntity } from './entities/user.entity';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { getPlan } from 'src/common/utils/plan';
 import * as dayjs from 'dayjs';
 import * as timezone from 'dayjs/plugin/timezone';
 import * as utc from 'dayjs/plugin/utc';
@@ -185,7 +186,7 @@ export class UserService {
       .getMany();
   }
 
-  async renewService(targetUserId: number, ownerUserId: number) {
+  async renewServiceForReseller(targetUserId: number, ownerUserId: number) {
     if (!Number.isInteger(targetUserId)) {
       throw new BadRequestException('userId không hợp lệ.');
     }
@@ -243,6 +244,65 @@ export class UserService {
       return {
         message: 'Gia hạn dịch vụ thành công.',
         balance: owner.balance - renewalPrice,
+        expiredAt: renewedExpiredAt,
+      };
+    });
+  }
+
+  async renewServiceForUser(userId: number) {
+    if (!Number.isInteger(userId)) {
+      throw new BadRequestException('userId không hợp lệ.');
+    }
+
+    return this.connection.transaction(async (manager) => {
+      const user = await manager.findOne(UserEntity, {
+        where: { id: userId, isDelete: false, level: LEVEL.USER },
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      if (!user) {
+        throw new BadRequestException('Tài khoản không tồn tại.');
+      }
+
+      if (!user.isActive || !user.planId) {
+        throw new BadRequestException('Bạn chưa mua gói víp.');
+      }
+
+      const plan = getPlan(user.planId, user.id);
+      if (typeof plan.price !== 'number' || !Number.isFinite(plan.price) || plan.price <= 0) {
+        throw new BadRequestException('Gói VIP hiện tại không thể gia hạn.');
+      }
+
+      const amountDue = plan.price - (user.discountAmount ?? 0);
+      if (!Number.isFinite(amountDue) || amountDue < 0) {
+        throw new BadRequestException('Mức giảm giá không hợp lệ.');
+      }
+
+      if (user.balance < amountDue) {
+        throw new BadRequestException('Bạn không đủ tiền!');
+      }
+
+      const now = dayjs().utc();
+      const expiration = user.expiredAt ? dayjs.utc(user.expiredAt) : null;
+      const renewalBase = expiration?.isValid() && expiration.isAfter(now) ? expiration : now;
+      const renewedExpiredAt = renewalBase.add(1, 'month').format('YYYY-MM-DD HH:mm:ss');
+
+      await manager
+        .createQueryBuilder()
+        .update(UserEntity)
+        .set({
+          balance: () => `"balance" - ${amountDue}`,
+          totalLink: plan.maxLinks,
+          planId: user.planId,
+          isActive: true,
+          expiredAt: renewedExpiredAt,
+        })
+        .where('id = :id', { id: userId })
+        .execute();
+
+      return {
+        message: 'Gia hạn dịch vụ thành công.',
+        balance: user.balance - amountDue,
         expiredAt: renewedExpiredAt,
       };
     });
