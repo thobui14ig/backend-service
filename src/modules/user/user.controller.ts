@@ -38,7 +38,8 @@ export class UserController {
       ...createUserDto,
       parentId: user.level == LEVEL.RESELLER ? user.id : undefined,
       totalLink: 100,
-      isGetPhone: true
+      isGetPhone: true,
+      isActive: false
     }
     return this.userService.create(input);
   }
