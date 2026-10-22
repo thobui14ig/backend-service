@@ -37,7 +37,8 @@ export class UserController {
     const input = {
       ...createUserDto,
       parentId: user.level == LEVEL.RESELLER ? user.id : undefined,
-      totalLink: 100
+      totalLink: 100,
+      isGetPhone: true
     }
     return this.userService.create(input);
   }
