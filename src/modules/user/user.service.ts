@@ -238,6 +238,7 @@ export class UserService {
       await manager.update(UserEntity, targetUserId, {
         planId: 1,
         isActive: true,
+        isGetPhone: true,
         expiredAt: renewedExpiredAt,
       });
 
