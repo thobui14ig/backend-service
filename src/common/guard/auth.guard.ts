@@ -1,9 +1,8 @@
 import {
   CanActivate,
   ExecutionContext,
-  HttpException,
-  HttpStatus,
-  Injectable
+  Injectable,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
@@ -14,6 +13,7 @@ import { RedisService } from 'src/modules/redis/redis.service';
 import { jwtConstants } from '../../modules/auth/auth.module';
 import { getSidFromRequest } from '../utils/auth';
 import { UserService } from 'src/modules/user/user.service';
+import { UserEntity } from 'src/modules/user/entities/user.entity';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -38,27 +38,38 @@ export class AuthGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const sid = getSidFromRequest(request)
     if (!sid) {
-      throw new HttpException('Error', HttpStatus.PAYMENT_REQUIRED);
+      throw new UnauthorizedException('Phiên đăng nhập không hợp lệ hoặc đã hết hạn');
     }
     const dataToken = await this.redisService.get(sid)
 
     if (!dataToken) {
-      throw new HttpException('Error', HttpStatus.PAYMENT_REQUIRED);
+      throw new UnauthorizedException('Phiên đăng nhập không hợp lệ hoặc đã hết hạn');
     }
 
-    const tokenParse = JSON.parse(dataToken)
+    let tokenParse: { accessToken?: string };
+    try {
+      tokenParse = JSON.parse(dataToken);
+    } catch {
+      throw new UnauthorizedException('Phiên đăng nhập không hợp lệ hoặc đã hết hạn');
+    }
 
+    let payload: Partial<UserEntity>;
     try {
       const token = tokenParse.accessToken
-      const { iat, exp, ...payload } = await this.jwtService.verifyAsync(token, {
+      const { iat, exp, ...verifiedPayload } = await this.jwtService.verifyAsync(token, {
         secret: jwtConstants.secret,
       });
-      
-      request['user'] = payload;
-      return await this.userService.updateLastActiveAt(payload.id)
+      payload = verifiedPayload;
     } catch (err) {
-      await this.authService.refreshToken(sid)
+      payload = await this.authService.refreshToken(sid);
     }
+
+    if (typeof payload.id !== 'number' || !Number.isInteger(payload.id) || payload.level == null) {
+      throw new UnauthorizedException('Phiên đăng nhập không hợp lệ hoặc đã hết hạn');
+    }
+
+    request['user'] = payload;
+    await this.userService.updateLastActiveAt(payload.id);
     return true;
   }
 }

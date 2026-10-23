@@ -88,28 +88,30 @@ export class AuthService {
     };
   }
 
-  async refreshToken(sid: string) {
-    try {
-      const dataToken = await this.redisService.get(sid)
-
-      if (!dataToken) {
-        throw new HttpException('Error', HttpStatus.PAYMENT_REQUIRED);
-      }
-
-      const tokenParse = JSON.parse(dataToken)
-      const refresh_token = tokenParse.refreshToken
-      const decodedToken = this.jwtService.verify(refresh_token);
-      const refreshTokenExp = decodedToken.exp;
-      const currentTime = Math.floor(Date.now() / 1000);
-      if (currentTime > refreshTokenExp) {
-        throw new HttpException('Error', HttpStatus.PAYMENT_REQUIRED);
-      }
-
-      const { iat, exp, ...payload } = decodedToken
-      const token = await this.createToken(payload);
-      await this.redisService.delete(sid)
-      await this.redisService.setJson(sid, token)
-    } catch (error) {
+  async refreshToken(sid: string): Promise<Partial<UserEntity>> {
+    const dataToken = await this.redisService.get(sid);
+    if (!dataToken) {
+      throw new UnauthorizedException('Phiên đăng nhập không hợp lệ hoặc đã hết hạn');
     }
+
+    let tokenParse: { refreshToken?: string };
+    try {
+      tokenParse = JSON.parse(dataToken);
+    } catch {
+      throw new UnauthorizedException('Phiên đăng nhập không hợp lệ hoặc đã hết hạn');
+    }
+
+    let decodedToken: Partial<UserEntity> & { iat?: number; exp?: number };
+    try {
+      decodedToken = this.jwtService.verify(tokenParse.refreshToken);
+    } catch {
+      throw new UnauthorizedException('Phiên đăng nhập không hợp lệ hoặc đã hết hạn');
+    }
+
+    const { iat, exp, ...payload } = decodedToken;
+    const token = await this.createToken(payload);
+    await this.redisService.delete(sid);
+    await this.redisService.setJson(sid, token);
+    return payload;
   }
 }

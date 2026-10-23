@@ -1,4 +1,4 @@
-import { ForbiddenException, HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { ForbiddenException, HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as dayjs from 'dayjs';
 import * as timezone from 'dayjs/plugin/timezone';
@@ -262,7 +262,11 @@ export class LinkService {
         .createQueryBuilder('e')
         .setLock('pessimistic_write')
         .where('e.id = :id', { id: params.id })
-        .getOneOrFail();
+        .getOne();
+
+      if (!record) {
+        throw new NotFoundException('Link không tồn tại');
+      }
 
       // 🔐 CHECK QUYỀN
       const isAdmin = level === LEVEL.ADMIN;
@@ -288,7 +292,11 @@ export class LinkService {
         .createQueryBuilder('e')
         .setLock('pessimistic_write')
         .where('e.id = :id', { id })
-        .getOneOrFail();
+        .getOne();
+
+      if (!record) {
+        throw new NotFoundException('Link không tồn tại');
+      }
 
       const isAdmin = level === LEVEL.ADMIN;
       const isOwner = record.userId === userId;
