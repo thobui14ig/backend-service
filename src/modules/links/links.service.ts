@@ -164,12 +164,23 @@ export class LinkService {
     const endDateParam = `$${queryParams.length + 4}`;
 
     const dataQuery = `
-      WITH filtered_links AS (
-        SELECT l.id, l.created_at
+      WITH ranked_links AS (
+        SELECT
+          l.id,
+          l.created_at,
+          ROW_NUMBER() OVER (
+            PARTITION BY l.user_id, l.link_url
+            ORDER BY l.created_at DESC, l.id DESC
+          ) AS duplicate_rank
         FROM links l
-        JOIN users u ON u.id = l.user_id
+        JOIN users u ON u.id = l.user_id and u.is_active = TRUE AND u.plan_id > 0
         WHERE ${baseWhere}
-        ORDER BY l.created_at DESC
+      ),
+      filtered_links AS (
+        SELECT id, created_at
+        FROM ranked_links
+        WHERE duplicate_rank = 1
+        ORDER BY created_at DESC, id DESC
         LIMIT ${limitParam}
         OFFSET ${offsetParam}
       )
@@ -186,7 +197,13 @@ export class LinkService {
           l.type,
           l.group_id AS "groupId",
           l.content,
-          p.name AS "pageName",
+          (
+            SELECT p.name
+            FROM page p
+            WHERE p.page_id = l.page_id AND p.user_id = l.user_id
+            ORDER BY p.id DESC
+            LIMIT 1
+          ) AS "pageName",
           g.name AS "groupName",
 
           COALESCE(comment_stats.total_comment, 0) AS "totalComment",
@@ -199,8 +216,7 @@ export class LinkService {
 
       FROM filtered_links fl
       JOIN links l ON l.id = fl.id
-      JOIN users u ON u.id = l.user_id
-      LEFT JOIN page p ON p.page_id = l.page_id AND l.user_id = p.user_id
+      JOIN users u ON u.id = l.user_id and u.is_active = TRUE AND u.plan_id > 0
       LEFT JOIN group_link g ON l.group_id = g.id
       LEFT JOIN (
         SELECT
@@ -214,14 +230,17 @@ export class LinkService {
         JOIN filtered_links comment_links ON comment_links.id = c.link_id
         GROUP BY c.link_id
       ) comment_stats ON comment_stats.link_id = l.id
-      ORDER BY l.created_at DESC
+      ORDER BY l.created_at DESC, l.id DESC
     `;
 
     const countQuery = `
       SELECT COUNT(*) AS "totalCount"
-      FROM links l
-      JOIN users u ON u.id = l.user_id
-      WHERE ${baseWhere};
+      FROM (
+        SELECT DISTINCT l.user_id, l.link_url
+        FROM links l
+        JOIN users u ON u.id = l.user_id AND u.is_active = TRUE AND u.plan_id > 0
+        WHERE ${baseWhere}
+      ) unique_links;
     `;
 
     const [response, countResponse] = await Promise.all([

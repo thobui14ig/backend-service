@@ -81,7 +81,7 @@ export class CommentsService {
     `
     const queryCount = `
       SELECT 
-          COUNT(*) AS totalCount
+          COUNT(*) AS "totalCount"
       FROM comments c
       JOIN links l 
           ON l.id = c.link_id and l.is_deleted = false and l.is_link_group = false and l.platform = '${platform}'
