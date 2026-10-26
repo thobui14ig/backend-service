@@ -1,25 +1,30 @@
-import { BadRequestException, HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
-import { CreateUserDto } from './dto/create-user.dto';
-import { LEVEL, UserEntity } from './entities/user.entity';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { getPlan } from 'src/common/utils/plan';
-import * as dayjs from 'dayjs';
-import * as timezone from 'dayjs/plugin/timezone';
-import * as utc from 'dayjs/plugin/utc';
+import {
+  BadRequestException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+} from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { DataSource, Repository } from "typeorm";
+import { CreateUserDto } from "./dto/create-user.dto";
+import { LEVEL, UserEntity } from "./entities/user.entity";
+import { UpdateUserDto } from "./dto/update-user.dto";
+import { getPlan } from "src/common/utils/plan";
+import * as dayjs from "dayjs";
+import * as timezone from "dayjs/plugin/timezone";
+import * as utc from "dayjs/plugin/utc";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
 @Injectable()
 export class UserService {
-  vnTimezone = 'Asia/Bangkok';
+  vnTimezone = "Asia/Bangkok";
   constructor(
     @InjectRepository(UserEntity)
     private repo: Repository<UserEntity>,
     private connection: DataSource,
-  ) { }
+  ) {}
 
   async findByEmail(username: string) {
     const res = await this.connection.query(`
@@ -31,15 +36,15 @@ export class UserService {
             u.level
         FROM users u
         WHERE u.username = '${username}' and u.is_deleted = false;
-      `)
+      `);
     if (res && res.length > 0) {
-      const user = res[0]
-      user.password = user.password
+      const user = res[0];
+      user.password = user.password;
 
-      return user
+      return user;
     }
 
-    return null
+    return null;
   }
 
   async create(dto: CreateUserDto) {
@@ -51,22 +56,19 @@ export class UserService {
     };
     const isExist = await this.repo.findOne({
       where: {
-        username: user.username
-      }
-    })
+        username: user.username,
+      },
+    });
 
     if (isExist) {
-      throw new HttpException(
-        `User đã tồn tại.`,
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new HttpException(`User đã tồn tại.`, HttpStatus.BAD_REQUEST);
     }
 
     const res = await this.repo.save(user);
     return this.connection.query(`
       INSERT INTO config (user_id)
       VALUES (${res.id});
-    `)
+    `);
   }
 
   async findById(id: number) {
@@ -75,29 +77,31 @@ export class UserService {
         id,
       },
     });
-    delete res.password
+    delete res.password;
 
-    return res
+    return res;
   }
 
   async getAll() {
     return this.repo
-      .createQueryBuilder('user')
-      .where('user.is_deleted = false and (user.level = 0 or user.level = 3)')
+      .createQueryBuilder("user")
+      .where(
+        "user.is_deleted = false and (user.level = 0 or  user.level = 2 or user.level = 3)",
+      )
       .select([
-        'user.id',
-        'user.username',
-        'user.level',
-        'user.language',
-        'user.balance',
-        'user.planId',
-        'user.expiredAt',
-        'user.isActive',
-        'user.isGetPhone',
-        'user.lastActiveAt',
+        "user.id",
+        "user.username",
+        "user.level",
+        "user.language",
+        "user.balance",
+        "user.planId",
+        "user.expiredAt",
+        "user.isActive",
+        "user.isGetPhone",
+        "user.lastActiveAt",
       ])
-      .loadRelationCountAndMap('user.totalLink', 'user.links')
-      .loadRelationCountAndMap('user.totalPage', 'user.pages')
+      .loadRelationCountAndMap("user.totalLink", "user.links")
+      .loadRelationCountAndMap("user.totalPage", "user.pages")
       .andWhere("user.username != :name", { name: "test" })
       .orderBy("is_active", "DESC")
       .getMany();
@@ -106,9 +110,8 @@ export class UserService {
   async delete(id: number) {
     try {
       return await this.repo.delete(id);
-      
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
   }
 
@@ -120,10 +123,10 @@ export class UserService {
     const res = await this.repo.findOne({
       where: {
         id: userId,
-        isDelete: false
+        isDelete: false,
       },
       select: {
-        id: true, 
+        id: true,
         username: true,
         level: true,
         balance: true,
@@ -132,9 +135,9 @@ export class UserService {
         typeConfig: true,
         discountAmount: true,
         maxPage: true,
-        language: true
-      }
-    })
+        language: true,
+      },
+    });
 
     return res;
   }
@@ -142,18 +145,15 @@ export class UserService {
   async changePass(dto: { password: string }, userId: number) {
     const user = await this.repo.findOne({
       where: {
-        id: userId
-      }
-    })
+        id: userId,
+      },
+    });
 
     if (!user) {
-      throw new HttpException(
-        `User không tồn tại.`,
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new HttpException(`User không tồn tại.`, HttpStatus.BAD_REQUEST);
     }
 
-    user.password = dto.password
+    user.password = dto.password;
 
     return this.repo.save(user);
   }
@@ -162,24 +162,23 @@ export class UserService {
     return this.connection.query(`
       UPDATE users
       SET last_active_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC'
-      WHERE id = ${userId};`)
+      WHERE id = ${userId};`);
   }
-
 
   getSubUsers(userId: number) {
     return this.repo
-      .createQueryBuilder('user')
-      .where('user.is_deleted = false and user.level = 3')
+      .createQueryBuilder("user")
+      .where("user.is_deleted = false and user.level = 3")
       .select([
-        'user.id',
-        'user.username',
-        'user.language',
-        'user.balance',
-        'user.planId',
-        'user.expiredAt',
-        'user.isActive',
-        'user.isGetPhone',
-        'user.lastActiveAt',
+        "user.id",
+        "user.username",
+        "user.language",
+        "user.balance",
+        "user.planId",
+        "user.expiredAt",
+        "user.isActive",
+        "user.isGetPhone",
+        "user.lastActiveAt",
       ])
       .andWhere("user.parentId = :userId", { userId })
       .orderBy("id", "DESC")
@@ -188,7 +187,7 @@ export class UserService {
 
   async renewServiceForReseller(targetUserId: number, ownerUserId: number) {
     if (!Number.isInteger(targetUserId)) {
-      throw new BadRequestException('userId không hợp lệ.');
+      throw new BadRequestException("userId không hợp lệ.");
     }
 
     const renewalPrice = 100000;
@@ -196,11 +195,11 @@ export class UserService {
     return this.connection.transaction(async (manager) => {
       const owner = await manager.findOne(UserEntity, {
         where: { id: ownerUserId, isDelete: false },
-        lock: { mode: 'pessimistic_write' },
+        lock: { mode: "pessimistic_write" },
       });
 
       if (!owner) {
-        throw new BadRequestException('Tài khoản không tồn tại.');
+        throw new BadRequestException("Tài khoản không tồn tại.");
       }
 
       const targetUser = await manager.findOne(UserEntity, {
@@ -209,21 +208,26 @@ export class UserService {
           parentId: ownerUserId,
           isDelete: false,
         },
-        lock: { mode: 'pessimistic_write' },
+        lock: { mode: "pessimistic_write" },
       });
 
       if (!targetUser) {
-        throw new BadRequestException('User không phải cấp dưới của bạn.');
+        throw new BadRequestException("User không phải cấp dưới của bạn.");
       }
 
       if (owner.balance < renewalPrice) {
-        throw new BadRequestException('Bạn không đủ tiền!');
+        throw new BadRequestException("Bạn không đủ tiền!");
       }
 
       const now = dayjs().utc();
-      const expiration = targetUser.expiredAt ? dayjs.utc(targetUser.expiredAt) : null;
-      const renewalBase = expiration?.isValid() && expiration.isAfter(now) ? expiration : now;
-      const renewedExpiredAt = renewalBase.add(1, 'month').format('YYYY-MM-DD HH:mm:ss');
+      const expiration = targetUser.expiredAt
+        ? dayjs.utc(targetUser.expiredAt)
+        : null;
+      const renewalBase =
+        expiration?.isValid() && expiration.isAfter(now) ? expiration : now;
+      const renewedExpiredAt = renewalBase
+        .add(1, "month")
+        .format("YYYY-MM-DD HH:mm:ss");
 
       await manager
         .createQueryBuilder()
@@ -232,7 +236,7 @@ export class UserService {
           balance: () => `"balance" - ${renewalPrice}`,
           expiredAt: renewedExpiredAt,
         })
-        .where('id = :id', { id: ownerUserId })
+        .where("id = :id", { id: ownerUserId })
         .execute();
 
       await manager.update(UserEntity, targetUserId, {
@@ -243,7 +247,7 @@ export class UserService {
       });
 
       return {
-        message: 'Gia hạn dịch vụ thành công.',
+        message: "Gia hạn dịch vụ thành công.",
         balance: owner.balance - renewalPrice,
         expiredAt: renewedExpiredAt,
       };
@@ -252,41 +256,48 @@ export class UserService {
 
   async renewServiceForUser(userId: number) {
     if (!Number.isInteger(userId)) {
-      throw new BadRequestException('userId không hợp lệ.');
+      throw new BadRequestException("userId không hợp lệ.");
     }
 
     return this.connection.transaction(async (manager) => {
       const user = await manager.findOne(UserEntity, {
         where: { id: userId, isDelete: false, level: LEVEL.USER },
-        lock: { mode: 'pessimistic_write' },
+        lock: { mode: "pessimistic_write" },
       });
 
       if (!user) {
-        throw new BadRequestException('Tài khoản không tồn tại.');
+        throw new BadRequestException("Tài khoản không tồn tại.");
       }
 
       if (!user.isActive || !user.planId) {
-        throw new BadRequestException('Bạn chưa mua gói víp.');
+        throw new BadRequestException("Bạn chưa mua gói víp.");
       }
 
       const plan = getPlan(user.planId, user.id);
-      if (typeof plan.price !== 'number' || !Number.isFinite(plan.price) || plan.price <= 0) {
-        throw new BadRequestException('Gói VIP hiện tại không thể gia hạn.');
+      if (
+        typeof plan.price !== "number" ||
+        !Number.isFinite(plan.price) ||
+        plan.price <= 0
+      ) {
+        throw new BadRequestException("Gói VIP hiện tại không thể gia hạn.");
       }
 
       const amountDue = plan.price - (user.discountAmount ?? 0);
       if (!Number.isFinite(amountDue) || amountDue < 0) {
-        throw new BadRequestException('Mức giảm giá không hợp lệ.');
+        throw new BadRequestException("Mức giảm giá không hợp lệ.");
       }
 
       if (user.balance < amountDue) {
-        throw new BadRequestException('Bạn không đủ tiền!');
+        throw new BadRequestException("Bạn không đủ tiền!");
       }
 
       const now = dayjs().utc();
       const expiration = user.expiredAt ? dayjs.utc(user.expiredAt) : null;
-      const renewalBase = expiration?.isValid() && expiration.isAfter(now) ? expiration : now;
-      const renewedExpiredAt = renewalBase.add(1, 'month').format('YYYY-MM-DD HH:mm:ss');
+      const renewalBase =
+        expiration?.isValid() && expiration.isAfter(now) ? expiration : now;
+      const renewedExpiredAt = renewalBase
+        .add(1, "month")
+        .format("YYYY-MM-DD HH:mm:ss");
 
       await manager
         .createQueryBuilder()
@@ -298,11 +309,11 @@ export class UserService {
           isActive: true,
           expiredAt: renewedExpiredAt,
         })
-        .where('id = :id', { id: userId })
+        .where("id = :id", { id: userId })
         .execute();
 
       return {
-        message: 'Gia hạn dịch vụ thành công.',
+        message: "Gia hạn dịch vụ thành công.",
         balance: user.balance - amountDue,
         expiredAt: renewedExpiredAt,
       };
