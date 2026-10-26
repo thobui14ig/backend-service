@@ -3,6 +3,7 @@ import {
   HttpStatus,
   Injectable,
   Logger,
+  OnModuleInit,
   UnauthorizedException,
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
@@ -19,15 +20,17 @@ interface IUserFail {
   time: string;
 }
 @Injectable()
-export class AuthService {
+export class AuthService implements OnModuleInit {
   private readonly logger = new Logger(AuthService.name);
   usersFail: IUserFail[] = [];
   constructor(
     private usersService: UserService,
     private jwtService: JwtService,
     private redisService: RedisService,
-  ) {
-    this.cleanupExpiredSessions();
+  ) {}
+
+  async onModuleInit(): Promise<void> {
+    await this.cleanupExpiredSessions();
   }
 
   async signIn(username: string, pass: string) {
@@ -97,6 +100,10 @@ export class AuthService {
 
     try {
       for await (const sid of this.redisService.scanKeys()) {
+        if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(sid)) {
+          continue;
+        }
+
         const value = await this.redisService.get(sid);
         if (!value) continue;
 
@@ -145,7 +152,6 @@ export class AuthService {
         "Failed to clean up expired sessions from Redis",
         error instanceof Error ? error.stack : String(error),
       );
-      throw error;
     }
   }
 
