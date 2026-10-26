@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post } from "@nestjs/common";
 import { Role, Roles } from "src/common/decorators/roles.decorator";
 import { TransactionService } from "./transaction.service";
 import { CreateTransactionDto } from "./transaction.controller.i";
@@ -16,5 +16,10 @@ export class TransactionController {
     @Get()
     findAll() {
         return this.transactionService.getAll()
+    }
+
+    @Delete(':id')
+    remove(@Param('id', ParseIntPipe) id: number) {
+        return this.transactionService.remove(id)
     }
 }

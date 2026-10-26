@@ -48,6 +48,7 @@ import { HttpModule } from '@nestjs/axios';
 import { BidvNotiEntity } from './modules/order/entities/bidv-noti.entity';
 import { ConfigEntity } from './modules/config/entities/config.entity';
 import { ConfigurationModule } from './modules/config/config.module';
+import { TransactionEntity } from './modules/transaction/entities/transaction.entity';
 
 @Module({
   imports: [
@@ -92,6 +93,7 @@ import { ConfigurationModule } from './modules/config/config.module';
           UserTiktokEntity,
           BidvNotiEntity,
           ConfigEntity,
+          TransactionEntity,
         ],
         // logging: true,
         // synchronize: true, // chỉ dùng trong dev!
