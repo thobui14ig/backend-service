@@ -35,13 +35,6 @@ export class AppController {
     return this.appService.insertUserSupport(body)
   }
 
-  @Get('config')
-  getConfig(@Req() req: Request) {
-    const user = getUser(req);
-    return this.appService.getConfig(user.id)
-  }
-
-
   @Get('fb-number')
   @Roles(Role.ADMIN)
   getFbNumber() {

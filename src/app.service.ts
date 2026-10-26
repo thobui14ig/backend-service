@@ -1,36 +1,46 @@
-import { Injectable } from '@nestjs/common';
-import * as dayjs from 'dayjs';
-import * as timezone from 'dayjs/plugin/timezone';
-import * as utc from 'dayjs/plugin/utc';
-import fetch from 'node-fetch';
-import { DataSource } from 'typeorm';
-import { DashboardStats, RequestSong } from './app.controller.i';
-import { ProxyService } from './modules/proxy/proxy.service';
-import { LEVEL, UserEntity } from './modules/user/entities/user.entity';
-import { HttpService } from '@nestjs/axios';
-import { firstValueFrom } from 'rxjs';
+import { Injectable } from "@nestjs/common";
+import * as dayjs from "dayjs";
+import * as timezone from "dayjs/plugin/timezone";
+import * as utc from "dayjs/plugin/utc";
+import fetch from "node-fetch";
+import { DataSource } from "typeorm";
+import { DashboardStats, RequestSong } from "./app.controller.i";
+import { ProxyService } from "./modules/proxy/proxy.service";
+import { LEVEL, UserEntity } from "./modules/user/entities/user.entity";
+import { HttpService } from "@nestjs/axios";
+import { firstValueFrom } from "rxjs";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
 export enum LoadResource {
-  COOKIE = 'cookie-active',
-  PROXY_CMT = 'proxy-cmt',
-  PROXY_INFO = 'proxy-info',
-  PROXY_PAGE = 'proxy-page',
-  TOKEN = 'token-active',
-  FB_NUMBER = 'fb-number-active',
+  COOKIE = "cookie-active",
+  PROXY_CMT = "proxy-cmt",
+  PROXY_INFO = "proxy-info",
+  PROXY_PAGE = "proxy-page",
+  TOKEN = "token-active",
+  FB_NUMBER = "fb-number-active",
 }
 
 @Injectable()
 export class AppService {
-    constructor(private connection: DataSource, private proxyService: ProxyService, private readonly httpService: HttpService,) {}
+  constructor(
+    private connection: DataSource,
+    private proxyService: ProxyService,
+    private readonly httpService: HttpService,
+  ) {}
 
-    async getDashboardStats(user: UserEntity, timezone: string): Promise<DashboardStats> {
-        const currentDay = dayjs().tz(timezone)
-        const startDate = currentDay.startOf('day').utc().format('YYYY-MM-DD HH:mm:ss');
-        const endDate = currentDay.endOf('day').utc().format('YYYY-MM-DD HH:mm:ss');
-        const res = await this.connection.query(`
+  async getDashboardStats(
+    user: UserEntity,
+    timezone: string,
+  ): Promise<DashboardStats> {
+    const currentDay = dayjs().tz(timezone);
+    const startDate = currentDay
+      .startOf("day")
+      .utc()
+      .format("YYYY-MM-DD HH:mm:ss");
+    const endDate = currentDay.endOf("day").utc().format("YYYY-MM-DD HH:mm:ss");
+    const res = await this.connection.query(`
         SELECT jsonb_build_object(
             'comment', (
                 SELECT jsonb_build_object(
@@ -48,7 +58,7 @@ export class AppService {
                     )
                 )
                 FROM comments c
-                join links l on l.id = c.link_id ${user.level == LEVEL.ADMIN ? '' : `and l.user_id = ${user.id}`}
+                join links l on l.id = c.link_id ${user.level == LEVEL.ADMIN ? "" : `and l.user_id = ${user.id}`}
                 join users u on u.id = l.user_id
             ),
 
@@ -104,7 +114,7 @@ export class AppService {
             JOIN users u 
                 ON u.id = links.user_id 
                 AND u.is_active = true
-            WHERE links.is_deleted = false ${user.level == LEVEL.ADMIN ?  '' : `and links.user_id = ${user.id}`}
+            WHERE links.is_deleted = false ${user.level == LEVEL.ADMIN ? "" : `and links.user_id = ${user.id}`}
             ),
 
             'proxy', (
@@ -169,58 +179,45 @@ export class AppService {
                 )
             )
         ) AS data;
-        `)
-        if (user.level != LEVEL.ADMIN) {
-            delete res[0].data.proxy
-            delete res[0].data.token
-            delete res[0].data.transaction
-            delete res[0].data.link.users
-        }
-
-        return res[0].data
+        `);
+    if (user.level != LEVEL.ADMIN) {
+      delete res[0].data.proxy;
+      delete res[0].data.token;
+      delete res[0].data.transaction;
+      delete res[0].data.link.users;
     }
 
-    getUserSupport() {
-        return this.connection.query(`
+    return res[0].data;
+  }
+
+  getUserSupport() {
+    return this.connection.query(`
             select * from buyers
-        `)
-    }
+        `);
+  }
 
-    async insertUserSupport(dto: RequestSong): Promise<any> {
-        const { full_name, phone, address } = dto;
+  async insertUserSupport(dto: RequestSong): Promise<any> {
+    const { full_name, phone, address } = dto;
 
-        return await this.connection.query(`
+    return await this.connection.query(`
             INSERT INTO buyers (full_name, phone, address)
             VALUES ('${full_name}', '${phone}', '${address}') 
         `);
-    }
+  }
 
-    async getConfig(userId: number) {
-        const res = await this.connection.query(`
-            select 
-                user_id as "userId",
-                excel_id as "excelId",
-                link_id as "linkId"
-                from config
-                where user_id=${userId}    
-        `)
-            
-        return res?.[0]??null
-    }
-
-    async getExportLink(linkId: number) {
-        const res = await this.connection.query(`
+  async getExportLink(linkId: number) {
+    const res = await this.connection.query(`
                 SELECT comment_ids as "commentIds"
             FROM export_link
             WHERE link_id = ${linkId};    
-        `)
+        `);
 
-        return res?.[0]??[]
-    }
+    return res?.[0] ?? [];
+  }
 
-    async updateExportLink(linkId: number, commentIds: number[]) {
-            return this.connection.query(
-            `
+  async updateExportLink(linkId: number, commentIds: number[]) {
+    return this.connection.query(
+      `
             INSERT INTO export_link (link_id, comment_ids)
             VALUES ($1, $2::bigint[])
             ON CONFLICT (link_id)
@@ -234,149 +231,148 @@ export class AppService {
                 )
             RETURNING *;
             `,
-            [linkId, commentIds]
-            );
+      [linkId, commentIds],
+    );
+  }
+
+  async getFbNumber() {
+    const apiKey =
+      "76248c24c84a973764d63de9a9a0031bIiFO2LBVE0h39aWMzUJK7fXdCDPmZexT";
+
+    const url = `https://dichvuviavip.com/api/profile.php?api_key=${apiKey}`;
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        "User-Agent": "Mozilla/5.0",
+      },
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`HTTP ${response.status}: ${text}`);
     }
 
-    async getFbNumber() {
-        const apiKey =
-            '76248c24c84a973764d63de9a9a0031bIiFO2LBVE0h39aWMzUJK7fXdCDPmZexT';
+    return await response.json();
+  }
 
-        const url = `https://dichvuviavip.com/api/profile.php?api_key=${apiKey}`;
-
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-            Accept: 'application/json',
-            'User-Agent': 'Mozilla/5.0',
-            },
-        });
-
-        if (!response.ok) {
-            const text = await response.text();
-            throw new Error(`HTTP ${response.status}: ${text}`);
-        }
-
-        return await response.json();
-    }
-
-    getVpsSpeed() {
-        return this.connection.query(`
+  getVpsSpeed() {
+    return this.connection.query(`
             select v.ip, v.port, vs.value  from vps v
             join vps_statistical vs on vs.vps_id  = v.id 
-        `)
-    }
+        `);
+  }
 
-    // convertUid(uid: string) {
-    //     return this.callApi(uid)
-    // }
+  // convertUid(uid: string) {
+  //     return this.callApi(uid)
+  // }
 
-    async loadFbNumber() {
-        const fbNumbers = await this.connection.query(`
+  async loadFbNumber() {
+    const fbNumbers = await this.connection.query(`
             select * from fb_number
         `);
-        return fbNumbers[0]
-    }
+    return fbNumbers[0];
+  }
 
-    // async callApi(uid: string, retry = 3): Promise<string | number | null> {
-    //     try {
-    //         // const proxy = await this.proxyService.getRandomProxy();
-    //         // if (!proxy) return "error";
+  // async callApi(uid: string, retry = 3): Promise<string | number | null> {
+  //     try {
+  //         // const proxy = await this.proxyService.getRandomProxy();
+  //         // if (!proxy) return "error";
 
-    //         const fbNumber = await this.loadFbNumber();
-    //         if (!fbNumber) return "error";
+  //         const fbNumber = await this.loadFbNumber();
+  //         if (!fbNumber) return "error";
 
-    //         // const httpsAgent = getHttpAgent(proxy);
+  //         // const httpsAgent = getHttpAgent(proxy);
 
-    //         const res = await fetch(
-    //         `https://api.fbnumber.com/v1/phone/find-info-by-phone?searchPhone=${uid}`,
-    //         {
-    //             // agent: httpsAgent,
-    //             method: "GET",
-    //             headers: {
-    //             accept: "application/json, text/plain, */*",
-    //             "accept-language": "en-US,en;q=0.9",
-    //             authorization: String(fbNumber.value),
-    //             priority: "u=1, i",
-    //             "sec-ch-ua":
-    //                 '"Not;A=Brand";v="8", "Chromium";v="150", "Google Chrome";v="150"',
-    //             "sec-ch-ua-mobile": "?0",
-    //             "sec-ch-ua-platform": '"macOS"',
-    //             "sec-fetch-dest": "empty",
-    //             "sec-fetch-mode": "cors",
-    //             "sec-fetch-site": "same-site",
-    //             "x-lang": "en",
-    //             Referer: "https://app.fbnumber.com/",
-    //             },
-    //         }
-    //         );
+  //         const res = await fetch(
+  //         `https://api.fbnumber.com/v1/phone/find-info-by-phone?searchPhone=${uid}`,
+  //         {
+  //             // agent: httpsAgent,
+  //             method: "GET",
+  //             headers: {
+  //             accept: "application/json, text/plain, */*",
+  //             "accept-language": "en-US,en;q=0.9",
+  //             authorization: String(fbNumber.value),
+  //             priority: "u=1, i",
+  //             "sec-ch-ua":
+  //                 '"Not;A=Brand";v="8", "Chromium";v="150", "Google Chrome";v="150"',
+  //             "sec-ch-ua-mobile": "?0",
+  //             "sec-ch-ua-platform": '"macOS"',
+  //             "sec-fetch-dest": "empty",
+  //             "sec-fetch-mode": "cors",
+  //             "sec-fetch-site": "same-site",
+  //             "x-lang": "en",
+  //             Referer: "https://app.fbnumber.com/",
+  //             },
+  //         }
+  //         );
 
-    //         const result = (await res.json()) as any;
+  //         const result = (await res.json()) as any;
 
-    //         if (result?.status === "success" && result?.data?.number) {
-    //         return result.data.number;
-    //         }
+  //         if (result?.status === "success" && result?.data?.number) {
+  //         return result.data.number;
+  //         }
 
-    //         if (result?.status === "error" && result?.code === "429") {
-    //         if (retry > 0) {
-    //             console.log(`429 - retry ${4 - retry}/3`);
-    //             await new Promise((resolve) => setTimeout(resolve, 1000)); // đợi 1s
-    //             return this.callApi(uid, retry - 1);
-    //         }
+  //         if (result?.status === "error" && result?.code === "429") {
+  //         if (retry > 0) {
+  //             console.log(`429 - retry ${4 - retry}/3`);
+  //             await new Promise((resolve) => setTimeout(resolve, 1000)); // đợi 1s
+  //             return this.callApi(uid, retry - 1);
+  //         }
 
-    //         return 429;
-    //         }
+  //         return 429;
+  //         }
 
-    //         if (
-    //             result?.status === "error" &&
-    //             result?.code === "UNAUTHORIZED"
-    //         ) {
-    //             return "error";
-    //         }
+  //         if (
+  //             result?.status === "error" &&
+  //             result?.code === "UNAUTHORIZED"
+  //         ) {
+  //             return "error";
+  //         }
 
-    //         return null;
-    //     } catch (error) {
-    //         console.log(error);
-    //         return "error";
-    //     }
-    // }
+  //         return null;
+  //     } catch (error) {
+  //         console.log(error);
+  //         return "error";
+  //     }
+  // }
 
-    async convertUid(uids: string[]) {
-        const result = uids.join('%0A');
-        const token = await this.getToken()
+  async convertUid(uids: string[]) {
+    const result = uids.join("%0A");
+    const token = await this.getToken();
 
-        return fetch("https://uidphone.com/convert-uid-to-phone-multi", {
-            "headers": {
-                "accept": "*/*",
-                "accept-language": "en-US,en;q=0.9",
-                "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
-                "priority": "u=1, i",
-                "x-requested-with": "XMLHttpRequest",
-                "cookie": "ci_session=ktg85gn39h8fnln1mlovcd9p7cle4nt6; request_number=5",
-                "Referer": "https://uidphone.com/scan-multi"
-                },
-            "body": `name=abc&type=uid2phone&method=from_uids&uids=${result}&fileuids=&_token=${token}`,
-                "method": "POST"
-                }).then(async (res) => {
-                    const response: any = await res.json()
-                    const map = {};
+    return fetch("https://uidphone.com/convert-uid-to-phone-multi", {
+      headers: {
+        accept: "*/*",
+        "accept-language": "en-US,en;q=0.9",
+        "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
+        priority: "u=1, i",
+        "x-requested-with": "XMLHttpRequest",
+        cookie: "ci_session=ktg85gn39h8fnln1mlovcd9p7cle4nt6; request_number=5",
+        Referer: "https://uidphone.com/scan-multi",
+      },
+      body: `name=abc&type=uid2phone&method=from_uids&uids=${result}&fileuids=&_token=${token}`,
+      method: "POST",
+    }).then(async (res) => {
+      const response: any = await res.json();
+      const map = {};
 
-                    (response.result as string??"")
-                        .trim()
-                        .split('\n')
-                        .forEach(line => {
-                            const [uid, phone] = line.split('|');
-                            map[uid] = phone;
-                        });
-                    return map
-                })
-                
-    }
+      ((response.result as string) ?? "")
+        .trim()
+        .split("\n")
+        .forEach((line) => {
+          const [uid, phone] = line.split("|");
+          map[uid] = phone;
+        });
+      return map;
+    });
+  }
 
-    async getToken() {
-        const response = await firstValueFrom(
-            this.httpService.get(`http://103.211.206.96:6100/get-token`),
-        );
-        return response.data;
-    }
+  async getToken() {
+    const response = await firstValueFrom(
+      this.httpService.get(`http://103.211.206.96:6100/get-token`),
+    );
+    return response.data;
+  }
 }
