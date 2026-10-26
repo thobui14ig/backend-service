@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { UserEntity } from '../user/entities/user.entity';
+import { DataSource, In, Repository } from 'typeorm';
+import { LEVEL, UserEntity } from '../user/entities/user.entity';
 import { ConfigEntity } from './entities/config.entity';
 import { UpdateConfigDto } from './dto/update-config.dto';
 
@@ -12,6 +12,7 @@ export class ConfigurationService {
     private readonly configRepository: Repository<ConfigEntity>,
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
+    private readonly dataSource: DataSource,
   ) {}
 
   getConfigsForUsers() {
@@ -25,7 +26,10 @@ export class ConfigurationService {
       .addSelect('config.linkId', 'linkId')
       .addSelect('config.isOrder', 'isOrder')
       .addSelect('config.isConvertUid', 'isConvertUid')
-      .where('user.isDelete = false AND (user.level = 0 OR user.level = 3)')
+      .where('user.isDelete = false')
+      .andWhere('user.level IN (:...levels)', {
+        levels: [LEVEL.ADMIN, LEVEL.USER, LEVEL.RESELLER],
+      })
       .andWhere('user.username != :username', { username: 'test' })
       .orderBy('user.id', 'DESC')
       .getRawMany();
@@ -70,33 +74,74 @@ export class ConfigurationService {
   }
 
   async updateConfigForUser(userId: number, input: UpdateConfigDto) {
-    let config = await this.configRepository.findOne({
-      where: { userId: String(userId) },
-    });
-
-    if (!config) {
-      const user = await this.userRepository.findOne({
+    return this.dataSource.transaction(async (manager) => {
+      const userRepository = manager.getRepository(UserEntity);
+      const configRepository = manager.getRepository(ConfigEntity);
+      const user = await userRepository.findOne({
         where: { id: userId, isDelete: false },
-        select: { id: true },
       });
+
       if (!user) {
         throw new NotFoundException('Không tìm thấy user.');
       }
-      config = this.configRepository.create({ userId: String(userId) });
-    }
 
-    config.excelId = String(input.excelId);
-    config.linkId = String(input.linkId);
-    config.isOrder = input.isOrder;
-    config.isConvertUid = input.isConvertUid;
+      const config =
+        (await configRepository.findOne({
+          where: { userId: String(userId) },
+        })) ?? configRepository.create({ userId: String(userId) });
 
-    const updated = await this.configRepository.save(config);
-    return {
-      userId: updated.userId,
-      excelId: updated.excelId,
-      linkId: updated.linkId,
-      isOrder: updated.isOrder,
-      isConvertUid: updated.isConvertUid,
-    };
+      config.excelId = String(input.excelId);
+      config.linkId = String(input.linkId);
+      config.isOrder = input.isOrder;
+      config.isConvertUid = input.isConvertUid;
+
+      const updated = await configRepository.save(config);
+
+      if (user.level === LEVEL.RESELLER) {
+        const subUsers = await userRepository.find({
+          where: {
+            parentId: userId,
+            level: LEVEL.SUB_USER,
+            isDelete: false,
+          },
+          select: { id: true },
+        });
+        const subUserIds = subUsers
+          .map((subUser) => subUser.id)
+          .filter((id): id is number => id !== undefined);
+
+        if (subUserIds.length > 0) {
+          const subUserConfigs = await configRepository.find({
+            where: { userId: In(subUserIds.map(String)) },
+          });
+          const configsByUserId = new Map(
+            subUserConfigs.map((subUserConfig) => [
+              subUserConfig.userId,
+              subUserConfig,
+            ]),
+          );
+          const configsToSave = subUserIds.map((subUserId) => {
+            const subUserConfig =
+              configsByUserId.get(String(subUserId)) ??
+              configRepository.create({ userId: String(subUserId) });
+            subUserConfig.excelId = String(input.excelId);
+            subUserConfig.linkId = String(input.linkId);
+            subUserConfig.isOrder = input.isOrder;
+            subUserConfig.isConvertUid = input.isConvertUid;
+            return subUserConfig;
+          });
+
+          await configRepository.save(configsToSave);
+        }
+      }
+
+      return {
+        userId: updated.userId,
+        excelId: updated.excelId,
+        linkId: updated.linkId,
+        isOrder: updated.isOrder,
+        isConvertUid: updated.isConvertUid,
+      };
+    });
   }
 }
