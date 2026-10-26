@@ -3,15 +3,26 @@ import { IsString, IsNotEmpty, IsOptional, IsEnum, IsNumber, Min, IsDateString, 
 
 export interface DashboardStats {
   link: LinkStats;
-  proxy: ProxyStats;
-  token: TokenStats;
   comment: CommentStats;
+  proxy?: ProxyStats;
+  token?: TokenStats;
+  transaction?: TransactionStats;
+  vps?: Record<string, VpsTypeStats>;
 }
 
 export interface LinkStats {
   die: number;
   live: number;
   undefined: number;
+  livePost: number;
+  liveLiveStream: number;
+  users?: DashboardUserStats[];
+}
+
+export interface DashboardUserStats {
+  id: number;
+  name: string;
+  totalLink: number;
 }
 
 export interface ProxyStats {
@@ -28,6 +39,20 @@ export interface TokenStats {
 export interface CommentStats {
   today: number;
   total: number;
+  pendingPhoneCommentCount: number;
+}
+
+export interface TransactionStats {
+  totalIncome: number | null;
+  totalExpense: number | null;
+  currentMonthIncome: number | null;
+  currentMonthExpense: number | null;
+}
+
+export interface VpsTypeStats {
+  averageSpeed: number;
+  fastest: { ip: string; speed: number } | null;
+  slowest: { ip: string; speed: number } | null;
 }
 
 

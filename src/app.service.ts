@@ -34,89 +34,45 @@ export class AppService {
     user: UserEntity,
     timezone: string,
   ): Promise<DashboardStats> {
+    const isAdmin = user.level === LEVEL.ADMIN;
+    const userScope = isAdmin ? "" : "AND l.user_id = $3";
     const currentDay = dayjs().tz(timezone);
     const startDate = currentDay
       .startOf("day")
       .utc()
       .format("YYYY-MM-DD HH:mm:ss");
     const endDate = currentDay.endOf("day").utc().format("YYYY-MM-DD HH:mm:ss");
-    const res = await this.connection.query(`
-        SELECT jsonb_build_object(
-            'comment', (
-                SELECT jsonb_build_object(
-                    'total', COUNT(*),
-                    'today', COUNT(*) FILTER (
-                        WHERE c.created_at >= '${startDate}'
-                            AND c.created_at <  '${endDate}'
-                    ),
-                    'pendingPhoneCommentCount', COUNT(*) FILTER (
-                        WHERE c.created_at >= NOW() - INTERVAL '24 hours'
-                            and c.is_process_phone = false and c.phone_number is null  and u.is_get_phone = true
-                            and l.platform in ('facebook')
-                            AND c.user_uid NOT LIKE 'Y29tb%'
-                            AND c.user_uid NOT LIKE '%pfbid%'
+    const adminLinkStats = isAdmin
+      ? `,
+            'users', (
+                SELECT jsonb_agg(
+                    jsonb_build_object(
+                        'id', x.id,
+                        'name', x.username,
+                        'totalLink', x.total_link
                     )
+                    ORDER BY x.total_link DESC
                 )
-                FROM comments c
-                join links l on l.id = c.link_id ${user.level == LEVEL.ADMIN ? "" : `and l.user_id = ${user.id}`}
-                join users u on u.id = l.user_id
-            ),
-
-            'link', (
-              SELECT jsonb_build_object(
-                'die', COUNT(*) FILTER (WHERE links.type = 'die'),
-                'undefined', COUNT(*) FILTER (WHERE links.type = 'undefined'),
-                'live', COUNT(*) FILTER (WHERE links.type IN ('public', 'private') AND (
-                    links.page_id IS NULL
-                    OR (
-                        links.page_id IS NOT NULL
-                        AND links.created_at >= (NOW() AT TIME ZONE 'UTC') - INTERVAL '5 hours'
-                    )
-                )),
-                'livePost', COUNT(*) FILTER (WHERE links.type IN ('public', 'private') AND (
-                    links.page_id IS NULL)),
-                'liveLiveStream', COUNT(*) FILTER (WHERE links.type IN ('public', 'private') AND (
-         
-                        links.page_id IS NOT NULL
-                        AND links.created_at >= (NOW() AT TIME ZONE 'UTC') - INTERVAL '5 hours'
-                )),
-                'users', (
-                    SELECT jsonb_agg(
-                        jsonb_build_object(
-                            'id', x.id,
-                            'name', x.username,
-                            'totalLink', x.total_link
+                FROM (
+                    SELECT u.id, u.username, COUNT(l.id) AS total_link
+                    FROM links l
+                    JOIN users u ON u.id = l.user_id
+                    WHERE l.is_deleted = false
+                    AND u.is_active = true
+                    AND (
+                        l.page_id IS NULL
+                        OR (
+                            l.page_id IS NOT NULL
+                            AND l.created_at >= NOW() - INTERVAL '24 hours'
                         )
-                        ORDER BY x.total_link DESC
                     )
-                    FROM (
-                        SELECT 
-                            u.id,
-                            u.username,
-                            COUNT(l.id) AS total_link
-                        FROM links l
-                        JOIN users u ON u.id = l.user_id
-                        WHERE l.is_deleted = false
-                        AND u.is_active = true
-                        AND (
-                            l.page_id IS NULL
-                            OR (
-                                l.page_id IS NOT NULL
-                                AND l.created_at >= NOW() - INTERVAL '24 hours'
-                            )
-                        )
-                        AND u.username != 'test'
-                        GROUP BY u.id, u.username
-                    ) x
-                )
-            )
-            FROM links
-            JOIN users u 
-                ON u.id = links.user_id 
-                AND u.is_active = true
-            WHERE links.is_deleted = false ${user.level == LEVEL.ADMIN ? "" : `and links.user_id = ${user.id}`}
-            ),
-
+                    AND u.username != 'test'
+                    GROUP BY u.id, u.username
+                ) x
+            )`
+      : "";
+    const adminStats = isAdmin
+      ? `,
             'proxy', (
                 SELECT jsonb_build_object(
                     'active', COUNT(*) FILTER (WHERE status = 'active'),
@@ -124,7 +80,6 @@ export class AppService {
                 )
                 FROM proxy
             ),
-
             'token', (
                 SELECT jsonb_build_object(
                     'active', COUNT(*) FILTER (WHERE status = 'active'),
@@ -134,7 +89,7 @@ export class AppService {
                 FROM token
             ),
             'transaction', (
-                SELECT json_build_object(
+                SELECT jsonb_build_object(
                     'totalIncome', SUM(amount) FILTER (WHERE type = 'income'),
                     'totalExpense', SUM(amount) FILTER (WHERE type = 'expense'),
                     'currentMonthIncome', SUM(amount) FILTER (
@@ -147,28 +102,28 @@ export class AppService {
                         AND EXTRACT(MONTH FROM created_at) = EXTRACT(MONTH FROM CURRENT_DATE)
                         AND EXTRACT(YEAR FROM created_at) = EXTRACT(YEAR FROM CURRENT_DATE)
                     )
-                ) AS summary
+                )
                 FROM transactions
             ),
             'vps', (
                 WITH speeds AS (
                     SELECT "type", ip, speed::numeric AS speed
                     FROM vps
-                    WHERE speed ~ '^[0-9]+(\.[0-9]+)?$'
+                    WHERE speed ~ '^[0-9]+(\\.[0-9]+)?$'
                 ),
                 statistics AS (
                     SELECT
                         "type",
                         ROUND(AVG(speed), 2) AS "averageSpeed",
                         (
-                            SELECT json_build_object('ip', item.ip, 'speed', item.speed)
+                            SELECT jsonb_build_object('ip', item.ip, 'speed', item.speed)
                             FROM speeds item
                             WHERE item."type" = speeds."type"
                             ORDER BY item.speed ASC
                             LIMIT 1
                         ) AS fastest,
                         (
-                            SELECT json_build_object('ip', item.ip, 'speed', item.speed)
+                            SELECT jsonb_build_object('ip', item.ip, 'speed', item.speed)
                             FROM speeds item
                             WHERE item."type" = speeds."type"
                             ORDER BY item.speed DESC
@@ -178,26 +133,78 @@ export class AppService {
                     GROUP BY "type"
                 )
                 SELECT COALESCE(
-                    json_object_agg(
+                    jsonb_object_agg(
                         "type"::text,
-                        json_build_object(
+                        jsonb_build_object(
                             'averageSpeed', "averageSpeed",
                             'fastest', fastest,
                             'slowest', slowest
                         )
                     ),
-                    '{}'::json
+                    '{}'::jsonb
                 )
                 FROM statistics
-            )
+            )`
+      : "";
+
+    const res = await this.connection.query(
+      `
+        SELECT jsonb_build_object(
+            'comment', (
+                SELECT jsonb_build_object(
+                    'total', COUNT(*),
+                    'today', COUNT(*) FILTER (
+                        WHERE c.created_at >= $1
+                            AND c.created_at < $2
+                    ),
+                    'pendingPhoneCommentCount', COUNT(*) FILTER (
+                        WHERE c.created_at >= NOW() - INTERVAL '24 hours'
+                            AND c.is_process_phone = false
+                            AND c.phone_number IS NULL
+                            AND u.is_get_phone = true
+                            AND l.platform = 'facebook'
+                            AND c.user_uid NOT LIKE 'Y29tb%'
+                            AND c.user_uid NOT LIKE '%pfbid%'
+                    )
+                )
+                FROM comments c
+                JOIN links l
+                    ON l.id = c.link_id
+                    ${userScope}
+                JOIN users u ON u.id = l.user_id
+            ),
+            'link', (
+                SELECT jsonb_build_object(
+                    'die', COUNT(*) FILTER (WHERE l.type = 'die'),
+                    'undefined', COUNT(*) FILTER (WHERE l.type = 'undefined'),
+                    'live', COUNT(*) FILTER (
+                        WHERE l.type IN ('public', 'private')
+                        AND (
+                            l.page_id IS NULL
+                            OR (
+                                l.page_id IS NOT NULL
+                                AND l.created_at >= (NOW() AT TIME ZONE 'UTC') - INTERVAL '5 hours'
+                            )
+                        )
+                    ),
+                    'livePost', COUNT(*) FILTER (
+                        WHERE l.type IN ('public', 'private') AND l.page_id IS NULL
+                    ),
+                    'liveLiveStream', COUNT(*) FILTER (
+                        WHERE l.type IN ('public', 'private')
+                        AND l.page_id IS NOT NULL
+                        AND l.created_at >= (NOW() AT TIME ZONE 'UTC') - INTERVAL '5 hours'
+                    )${adminLinkStats}
+                )
+                FROM links l
+                JOIN users u ON u.id = l.user_id AND u.is_active = true
+                WHERE l.is_deleted = false
+                    ${userScope}
+            )${adminStats}
         ) AS data;
-        `);
-    if (user.level != LEVEL.ADMIN) {
-      delete res[0].data.proxy;
-      delete res[0].data.token;
-      delete res[0].data.transaction;
-      delete res[0].data.link.users;
-    }
+        `,
+      isAdmin ? [startDate, endDate] : [startDate, endDate, user.id],
+    );
 
     return res[0].data;
   }
