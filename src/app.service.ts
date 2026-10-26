@@ -152,31 +152,43 @@ export class AppService {
             ),
             'vps', (
                 WITH speeds AS (
-                    SELECT ip, speed::numeric AS speed
+                    SELECT "type", ip, speed::numeric AS speed
                     FROM vps
                     WHERE speed ~ '^[0-9]+(\.[0-9]+)?$'
+                ),
+                statistics AS (
+                    SELECT
+                        "type",
+                        ROUND(AVG(speed), 2) AS "averageSpeed",
+                        (
+                            SELECT json_build_object('ip', item.ip, 'speed', item.speed)
+                            FROM speeds item
+                            WHERE item."type" = speeds."type"
+                            ORDER BY item.speed ASC
+                            LIMIT 1
+                        ) AS fastest,
+                        (
+                            SELECT json_build_object('ip', item.ip, 'speed', item.speed)
+                            FROM speeds item
+                            WHERE item."type" = speeds."type"
+                            ORDER BY item.speed DESC
+                            LIMIT 1
+                        ) AS slowest
+                    FROM speeds
+                    GROUP BY "type"
                 )
-                SELECT json_build_object(
-                    'averageSpeed', (SELECT ROUND(AVG(speed), 2) FROM speeds),
-                    'fastest', (
-                        SELECT json_build_object(
-                            'ip', ip,
-                            'speed', speed
+                SELECT COALESCE(
+                    json_object_agg(
+                        "type"::text,
+                        json_build_object(
+                            'averageSpeed', "averageSpeed",
+                            'fastest', fastest,
+                            'slowest', slowest
                         )
-                        FROM speeds
-                        ORDER BY speed ASC
-                        LIMIT 1
                     ),
-                    'slowest', (
-                        SELECT json_build_object(
-                            'ip', ip,
-                            'speed', speed
-                        )
-                        FROM speeds
-                        ORDER BY speed DESC
-                        LIMIT 1
-                    )
+                    '{}'::json
                 )
+                FROM statistics
             )
         ) AS data;
         `);
@@ -259,7 +271,7 @@ export class AppService {
 
   getVpsSpeed() {
     return this.connection.query(`
-            select v.ip, v.port, vs.value  from vps v
+            select v.ip, v.port, v."type", vs.value  from vps v
             join vps_statistical vs on vs.vps_id  = v.id 
         `);
   }
