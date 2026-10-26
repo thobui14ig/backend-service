@@ -15,7 +15,31 @@ export class RedisService {
     return this.redis.del(key);
   }
 
+  async deleteIfValueMatches(key: string, value: string): Promise<boolean> {
+    const deleted = await this.redis.eval(
+      "if redis.call('GET', KEYS[1]) == ARGV[1] then return redis.call('DEL', KEYS[1]) else return 0 end",
+      1,
+      key,
+      value,
+    );
+    return deleted === 1;
+  }
+
   async get(key: string) {
     return this.redis.get(key);
+  }
+
+  async *scanKeys(count = 100): AsyncGenerator<string> {
+    let cursor = '0';
+
+    do {
+      const [nextCursor, keys] = await this.redis.scan(
+        cursor,
+        'COUNT',
+        count,
+      );
+      cursor = nextCursor;
+      yield* keys;
+    } while (cursor !== '0');
   }
 }

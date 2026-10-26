@@ -1,11 +1,11 @@
-import { HttpException, HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import * as dayjs from 'dayjs';
-import { Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
+import { RedisService } from '../redis/redis.service';
 import { UserEntity } from '../user/entities/user.entity';
 import { UserService } from '../user/user.service';
-import { RedisService } from '../redis/redis.service';
 
 interface IUserFail {
   username: string,
@@ -14,12 +14,15 @@ interface IUserFail {
 }
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
   usersFail: IUserFail[] = []
   constructor(
     private usersService: UserService,
     private jwtService: JwtService,
     private redisService: RedisService,
-  ) { }
+  ) {
+    this.cleanupExpiredSessions();
+  }
 
   async signIn(username: string, pass: string) {
     const { password, ...user } = await this.usersService.findByEmail(username) || {};
@@ -74,6 +77,65 @@ export class AuthService {
       info: {
         ...user
       }
+    }
+  }
+
+  @Cron(CronExpression.EVERY_HOUR)
+  async cleanupExpiredSessions(): Promise<void> {
+    let deletedSessions = 0;
+    const now = Date.now() / 1000;
+
+    try {
+      for await (const sid of this.redisService.scanKeys()) {
+        const value = await this.redisService.get(sid);
+        if (!value) continue;
+
+        let session: unknown;
+        try {
+          session = JSON.parse(value);
+        } catch {
+          continue;
+        }
+
+        if (
+          session === null ||
+          typeof session !== 'object' ||
+          !('refreshToken' in session) ||
+          typeof session.refreshToken !== 'string'
+        ) {
+          continue;
+        }
+
+        let payload: unknown;
+        try {
+          payload = this.jwtService.verify(session.refreshToken, {
+            ignoreExpiration: true,
+          });
+        } catch {
+          continue;
+        }
+
+        if (
+          payload === null ||
+          typeof payload !== 'object' ||
+          !('exp' in payload) ||
+          typeof payload.exp !== 'number' ||
+          payload.exp > now
+        ) {
+          continue;
+        }
+        if (await this.redisService.deleteIfValueMatches(sid, value)) {
+          deletedSessions++;
+        }
+      }
+
+      this.logger.log(`Removed ${deletedSessions} expired sessions from Redis`);
+    } catch (error) {
+      this.logger.error(
+        'Failed to clean up expired sessions from Redis',
+        error instanceof Error ? error.stack : String(error),
+      );
+      throw error;
     }
   }
 
