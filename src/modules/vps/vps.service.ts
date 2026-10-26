@@ -1,9 +1,9 @@
 import { HttpService } from "@nestjs/axios";
-import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { firstValueFrom } from "rxjs";
 import { Repository } from "typeorm";
-import { VpsEntity, VpsStatus } from "./entities/vps.entity";
+import { VpsEntity, VpsType } from "./entities/vps.entity";
 import { CreateVpsDto } from "./dto/create-page.dto";
 import { AppGateway } from "src/infra/socket/app.gateway";
 
@@ -17,50 +17,45 @@ export class VpsService {
     ) { }
 
     async create(params: CreateVpsDto, userId: number) {
-        const vpsValid = [];
-        const vpsInValid = [];
+        const vpsToCreate: Array<Pick<VpsEntity, 'ip' | 'port' | 'type'>> = [];
+        const duplicates: string[] = [];
 
-        for (let vps of params.vps) {
-            const vpsSplit = vps.split(":")
-            const isExit = (await this.repo.findOne({
-                where: {
-                    ip: vpsSplit[0],
-                    port: Number(vpsSplit[1]),
-                },
-            }))
-                ? true
-                : false;
+        for (const entry of params.vps) {
+            const match = /^([^:\s]+):(\d{1,5})$/.exec(entry.trim());
+            const port = match ? Number(match[2]) : NaN;
+            if (!match || port < 1 || port > 65535) {
+                throw new BadRequestException(`VPS không hợp lệ: ${entry}`);
+            }
 
-            if (!isExit) {
-                vpsValid.push({
-                    ip: vpsSplit[0],
-                    port: Number(vpsSplit[1]),
-                });
+            const ip = match[1];
+            const exists = await this.repo.findOne({ where: { ip, port } });
+            if (exists) {
+                duplicates.push(entry);
                 continue;
             }
 
-            vpsInValid.push(vps);
+            vpsToCreate.push({ ip, port, type: params.type ?? VpsType.Post });
         }
 
-        await this.repo.save(vpsValid);
-
-        if (vpsInValid.length > 0) {
-            throw new HttpException(
-                `Thêm thành công ${vpsValid.length}, page bị trùng: [${vpsInValid.join(',')}]`,
-                HttpStatus.BAD_REQUEST,
-            );
+        if (vpsToCreate.length > 0) {
+            await this.repo.save(vpsToCreate);
         }
-        throw new HttpException(
-            `Thêm thành công ${vpsValid.length} page`,
-            HttpStatus.OK,
-        );
+
+        return {
+            createdCount: vpsToCreate.length,
+            duplicates,
+            message: duplicates.length
+                ? `Đã thêm ${vpsToCreate.length} VPS; các VPS sau đã tồn tại: ${duplicates.join(', ')}`
+                : `Đã thêm ${vpsToCreate.length} VPS`
+        };
     }
 
 
     async getAll() {
         return await this.repo.find({
             order: {
-                id: "ASC"
+                ip: 'ASC',
+                port: 'DESC'
             }
         })
     }

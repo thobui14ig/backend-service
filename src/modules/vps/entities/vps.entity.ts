@@ -1,26 +1,43 @@
-import { CookieEntity } from 'src/modules/cookie/entities/cookie.entity';
-import { LinkEntity } from 'src/modules/links/entities/links.entity';
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 export enum VpsStatus {
-    Live = 'live',
-    Die = 'die',
+  Live = 'live',
+  Die = 'die'
+}
+
+export enum VpsType {
+  Post = 'post',
+  Livestream = 'livestream',
+  User = 'user'
 }
 
 @Entity('vps')
 export class VpsEntity {
-    @PrimaryGeneratedColumn()
-    id: number;
+  @PrimaryGeneratedColumn({ type: 'integer' })
+  id: number;
 
-    @Column()
-    ip: string
+  @Column({ type: 'varchar', length: 255 })
+  ip: string;
 
-    @Column()
-    port: number;
+  @Column({ type: 'integer' })
+  port: number;
 
-    @Column()
-    speed: string;
+  @Column({ type: 'varchar', length: 255, default: '0' })
+  speed: string;
 
-    @Column({ default: VpsStatus.Live })
-    status: VpsStatus;
+  @Column({
+    type: 'enum',
+    enum: VpsStatus,
+    enumName: 'vps_status',
+    default: VpsStatus.Live
+  })
+  status: VpsStatus;
+
+  @Column({
+    type: 'enum',
+    enum: VpsType,
+    enumName: 'vps_type_enum',
+    default: VpsType.Post
+  })
+  type: VpsType;
 }
