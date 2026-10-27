@@ -18,7 +18,7 @@ export class GroupService {
     return this.repo.save(arg)
   }
 
-  findAll(user: UserEntity) {
+  findAll(user: UserEntity, userId?: number) {
     const query = this.repo
       .createQueryBuilder('g')
       .leftJoinAndSelect('g.user', 'u')
@@ -30,7 +30,9 @@ export class GroupService {
       ])
       .orderBy('g.id', 'DESC');
 
-    if (user.level !== LEVEL.ADMIN) {
+    if (user.level === LEVEL.ADMIN && userId !== undefined) {
+      query.where('g.userId = :userId', { userId });
+    } else if (user.level !== LEVEL.ADMIN) {
       query.where('g.userId = :userId', {
         userId: user.id,
       });

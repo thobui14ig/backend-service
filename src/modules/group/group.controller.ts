@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Req } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, Patch, Post, Query, Req } from '@nestjs/common';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
 import { GroupService } from './group.service';
@@ -16,9 +16,18 @@ export class GroupFacebookController {
   }
 
   @Get()
-  findAll(@Req() req: Request,) {
+  findAll(@Req() req: Request, @Query('userId') userId?: string) {
     const user = getUser(req);
-    return this.groupService.findAll(user);
+    if (userId === undefined) {
+      return this.groupService.findAll(user);
+    }
+
+    const parsedUserId = Number(userId);
+    if (!Number.isInteger(parsedUserId) || parsedUserId <= 0) {
+      throw new BadRequestException('userId không hợp lệ');
+    }
+
+    return this.groupService.findAll(user, parsedUserId);
   }
 
   @Get(':id')
