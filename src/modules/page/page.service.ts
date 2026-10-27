@@ -1,14 +1,19 @@
-import { HttpService } from '@nestjs/axios';
-import { ForbiddenException, HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { lastValueFrom } from 'rxjs';
-import { DataSource, Repository } from 'typeorm';
-import { LinkService } from '../links/links.service';
-import { LEVEL, UserEntity } from '../user/entities/user.entity';
-import { UserService } from '../user/user.service';
-import { CreatePageDto } from './dto/create-page.dto';
-import { UpdatePageDto } from './dto/update-page.dto';
-import { PageEntity } from './entities/page.entity';
+import { HttpService } from "@nestjs/axios";
+import {
+  ForbiddenException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+} from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { lastValueFrom } from "rxjs";
+import { DataSource, Repository } from "typeorm";
+import { LinkService } from "../links/links.service";
+import { LEVEL, UserEntity } from "../user/entities/user.entity";
+import { UserService } from "../user/user.service";
+import { CreatePageDto } from "./dto/create-page.dto";
+import { UpdatePageDto } from "./dto/update-page.dto";
+import { PageEntity } from "./entities/page.entity";
 
 @Injectable()
 export class PageService {
@@ -19,25 +24,26 @@ export class PageService {
     private connection: DataSource,
     private httpService: HttpService,
     private linkService: LinkService,
-
-  ) { }
+  ) {}
 
   async create(params: CreatePageDto, userId: number) {
-    const arg = { ...params, userId }
-    const totalPage = await this.getTotalPage(userId)
-    const user = await this.userService.getInfo(userId)
+    const arg = { ...params, userId };
+    const totalPage = await this.getTotalPage(userId);
+    const user = await this.userService.getInfo(userId);
 
     if (totalPage >= user.maxPage) {
       throw new HttpException(
-          `Tài khoản của bạn chỉ được thêm tối đa ${user.maxPage} page`,
-          HttpStatus.BAD_REQUEST,
-      );      
+        `Tài khoản của bạn chỉ được thêm tối đa ${user.maxPage} page`,
+        HttpStatus.BAD_REQUEST,
+      );
     }
-    return this.repo.save(arg)
+    return this.repo.save(arg);
   }
 
   restartCronJob() {
-    return lastValueFrom(this.httpService.get(`http://${process.env.CRON_JOB_SERVICE}/restart`));
+    return lastValueFrom(
+      this.httpService.get(`http://${process.env.CRON_JOB_SERVICE}/restart`),
+    );
   }
 
   getTotalPage(userId: number) {
@@ -49,14 +55,15 @@ export class PageService {
   }
 
   findAll(user: UserEntity, userId: null | undefined) {
-    let condition = ""
+    let condition = "";
 
     if (user.level != LEVEL.ADMIN) {
-      condition += `where p.user_id = ${user.id}`
+      condition += `where p.user_id = ${user.id}`;
     }
 
-    const conditionUser = user.level != LEVEL.ADMIN ? `AND l.user_id=${user.id}` : ""
-    const conditionUserForAdmin = userId ? `AND u.id = ${userId}` : ""
+    const conditionUser =
+      user.level != LEVEL.ADMIN ? `AND l.user_id=${user.id}` : "";
+    const conditionUserForAdmin = userId ? `AND u.id = ${userId}` : "";
 
     const query = `
       select p.id,
@@ -66,6 +73,7 @@ export class PageService {
       p.is_active as "isActive",
       p.created_at::TEXT AS "createdAt",
       u.username as "username",
+      p.username as "pagename",
       COUNT(l.id) AS "totalLink" 
       from page p
       left join links l on l.page_id = p.page_id AND l.user_id=p.user_id ${conditionUser}
@@ -73,8 +81,8 @@ export class PageService {
       ${condition}
       group by p.id  , u.username 
       order by p.id desc
-    `
-    return this.connection.query(query)
+    `;
+    return this.connection.query(query);
   }
 
   findOne(id: number) {
@@ -89,29 +97,29 @@ export class PageService {
     const group = await this.repo.findOne({
       where: {
         id,
-        userId
-      }
-    })
+        userId,
+      },
+    });
     if (group) {
-      return this.repo.save({ id, ...params })
+      return this.repo.save({ id, ...params });
     }
 
-    throw new ForbiddenException('Bạn không có quyền');
+    throw new ForbiddenException("Bạn không có quyền");
   }
 
   async remove(id: number, user: UserEntity) {
     const page = await this.repo.findOne({
       where: {
         id,
-      }
-    })
+      },
+    });
     const isAdmin = user.level === LEVEL.ADMIN;
     const isOwner = page.userId === user.id;
     if (!isAdmin && !isOwner) {
-      throw new ForbiddenException('Bạn không có quyền');
+      throw new ForbiddenException("Bạn không có quyền");
     }
-    
-    await this.linkService.deleteLinkByPage(page.pageId, user.id)
-    return this.repo.delete(id)
+
+    await this.linkService.deleteLinkByPage(page.pageId, user.id);
+    return this.repo.delete(id);
   }
 }

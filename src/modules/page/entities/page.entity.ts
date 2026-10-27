@@ -1,25 +1,34 @@
-import { GroupEntity } from 'src/modules/group/entities/group.entity';
-import { UserEntity } from 'src/modules/user/entities/user.entity';
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { GroupEntity } from "src/modules/group/entities/group.entity";
+import { UserEntity } from "src/modules/user/entities/user.entity";
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+} from "typeorm";
 
-@Entity('page')
+@Entity("page")
 export class PageEntity {
-    @PrimaryGeneratedColumn()
-    id: number;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @Column({ name: "page_id" })
-    pageId: string;
+  @Column({ name: "page_id" })
+  pageId: string;
 
-    @Column({ name: "name" })
-    name: string;
+  @Column({ name: "name" })
+  name: string;
 
-    @Column({ name: "user_id" })
-    userId: number;
+  @Column({ name: "username" })
+  username: string;
 
-    @Column({ name: "is_active" })
-    isActive: boolean;
+  @Column({ name: "user_id" })
+  userId: number;
 
-    @ManyToOne(() => UserEntity, (user) => user.pages)
-    @JoinColumn({ name: 'user_id' })
-    user: UserEntity;
+  @Column({ name: "is_active" })
+  isActive: boolean;
+
+  @ManyToOne(() => UserEntity, (user) => user.pages)
+  @JoinColumn({ name: "user_id" })
+  user: UserEntity;
 }
