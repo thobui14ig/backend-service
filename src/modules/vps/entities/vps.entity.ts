@@ -1,43 +1,45 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 
 export enum VpsStatus {
-  Live = 'live',
-  Die = 'die'
+  Live = "live",
+  Die = "die",
 }
 
 export enum VpsType {
-  Post = 'post',
-  Livestream = 'livestream',
-  User = 'user'
+  Post = "post",
+  Livestream = "livestream",
+  User = "user",
+  Cronjob = "cronjob",
+  ProcessPhone = "process-phone",
 }
 
-@Entity('vps')
+@Entity("vps")
 export class VpsEntity {
-  @PrimaryGeneratedColumn({ type: 'integer' })
+  @PrimaryGeneratedColumn({ type: "integer" })
   id: number;
 
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: "varchar", length: 255 })
   ip: string;
 
-  @Column({ type: 'integer' })
+  @Column({ type: "integer" })
   port: number;
 
-  @Column({ type: 'varchar', length: 255, default: '0' })
+  @Column({ type: "varchar", length: 255, default: "0" })
   speed: string;
 
   @Column({
-    type: 'enum',
+    type: "enum",
     enum: VpsStatus,
-    enumName: 'vps_status',
-    default: VpsStatus.Live
+    enumName: "vps_status",
+    default: VpsStatus.Live,
   })
   status: VpsStatus;
 
   @Column({
-    type: 'enum',
+    type: "enum",
     enum: VpsType,
-    enumName: 'vps_type_enum',
-    default: VpsType.Post
+    enumName: "vps_type_enum",
+    default: VpsType.Post,
   })
   type: VpsType;
 }
