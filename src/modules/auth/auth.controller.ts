@@ -10,7 +10,7 @@ import {
 import { Request, Response } from 'express';
 
 import { Public } from 'src/common/guard/guard';
-import { AuthService } from './auth.service';
+import { SignInUseCase } from './application/use-cases/sign-in.use-case';
 import { LoginDto } from './dto/login.dto';
 import { getSidFromRequest } from 'src/common/utils/auth';
 import { Throttle } from '@nestjs/throttler';
@@ -18,7 +18,7 @@ import { Throttle } from '@nestjs/throttler';
 @Controller('auth')
 @Public()
 export class AuthController {
-  constructor(private readonly authService: AuthService) { }
+  constructor(private readonly signInUseCase: SignInUseCase) { }
 
   @HttpCode(HttpStatus.OK)
   @Post('login')
@@ -33,7 +33,7 @@ export class AuthController {
     @Res()
     res: Response,
   ) {
-    const response = await this.authService.signIn(
+    const response = await this.signInUseCase.execute(
       (signInDto.username).trim().toLowerCase(),
       signInDto.password,
     );

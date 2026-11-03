@@ -2,27 +2,19 @@
 import {
     CallHandler,
     ExecutionContext,
-    HttpException,
-    HttpStatus,
     Injectable,
     NestInterceptor,
 } from '@nestjs/common';
-import { UserService } from 'src/modules/user/user.service';
+import { EnsureUserHasPlanUseCase } from 'src/modules/user/application/use-cases/ensure-user-has-plan.use-case';
 
 @Injectable()
 export class CheckVipInterceptor implements NestInterceptor {
-    constructor(private userService: UserService,) { }
+    constructor(private readonly ensureUserHasPlan: EnsureUserHasPlanUseCase) { }
 
     async intercept(context: ExecutionContext, next: CallHandler) {
         const request = context.switchToHttp().getRequest();
         const user = request["user"]
-        const userFromDb = await this.userService.findById(user["id"])
-        if (!userFromDb.planId) {
-            throw new HttpException(
-                `Bạn chưa mua gói víp nào.`,
-                HttpStatus.BAD_REQUEST,
-            );
-        }
+        await this.ensureUserHasPlan.execute(user["id"]);
         return next.handle()
     }
 }

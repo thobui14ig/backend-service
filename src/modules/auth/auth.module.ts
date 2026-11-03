@@ -1,9 +1,13 @@
 import { Module } from '@nestjs/common';
-import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { UserModule } from '../user/user.module';
 import { RedisModule } from '../redis/redis.module';
+import { AUTH_PORT } from './application/auth.port';
+import { RefreshSessionUseCase } from './application/use-cases/refresh-session.use-case';
+import { SignInUseCase } from './application/use-cases/sign-in.use-case';
+import { ExpiredSessionsCleanupJob } from './infrastructure/expired-sessions-cleanup.job';
+import { JwtRedisAuthAdapter } from './infrastructure/jwt-redis-auth.adapter';
 
 export const jwtConstants = {
   secret:
@@ -21,7 +25,13 @@ export const jwtConstants = {
     RedisModule
   ],
   controllers: [AuthController],
-  providers: [AuthService],
-  exports: [AuthService],
+  providers: [
+    SignInUseCase,
+    RefreshSessionUseCase,
+    JwtRedisAuthAdapter,
+    ExpiredSessionsCleanupJob,
+    { provide: AUTH_PORT, useExisting: JwtRedisAuthAdapter },
+  ],
+  exports: [RefreshSessionUseCase],
 })
 export class AuthModule { }

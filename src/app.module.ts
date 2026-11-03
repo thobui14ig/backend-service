@@ -8,7 +8,18 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { join } from 'path';
 import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { AppInfrastructureAdapter } from './app/infrastructure/app.infrastructure.adapter';
+import { APP_PORT } from './app/application/app.port';
+import {
+  ConvertUidUseCase,
+  GetDashboardStatsUseCase,
+  GetExportLinkUseCase,
+  GetFbNumberUseCase,
+  GetUserSupportUseCase,
+  GetVpsSpeedUseCase,
+  InsertUserSupportUseCase,
+  ProxyLowCacheUseCase,
+} from './app/application/use-cases/app.use-cases';
 import { AuthGuard } from './common/guard/auth.guard';
 import { AuthModule } from './modules/auth/auth.module';
 import { CommentsModule } from './modules/comments/comments.module';
@@ -127,7 +138,16 @@ import { TransactionEntity } from './modules/transaction/entities/transaction.en
   ],
   controllers: [AppController],
   providers: [
-    AppService,
+    AppInfrastructureAdapter,
+    { provide: APP_PORT, useExisting: AppInfrastructureAdapter },
+    GetDashboardStatsUseCase,
+    GetUserSupportUseCase,
+    InsertUserSupportUseCase,
+    GetExportLinkUseCase,
+    GetFbNumberUseCase,
+    GetVpsSpeedUseCase,
+    ConvertUidUseCase,
+    ProxyLowCacheUseCase,
     {
       provide: APP_GUARD,
       useClass: AuthGuard,

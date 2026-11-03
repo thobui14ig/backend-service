@@ -1,11 +1,18 @@
 import { Module } from '@nestjs/common';
-import { NotificationController } from './notification.controller';
-import { NotificationService } from './notification.service';
+import { NotificationController } from './presentation/http/notification.controller';
+import { NOTIFICATION_PORT } from './application/notification.port';
+import { ListNotificationsUseCase } from './application/use-cases/list-notifications.use-case';
+import { MarkNotificationReadUseCase } from './application/use-cases/mark-notification-read.use-case';
+import { PostgresNotificationAdapter } from './infrastructure/postgres-notification.adapter';
 
 @Module({
   imports: [],
-  exports: [NotificationService],
   controllers: [NotificationController],
-  providers: [NotificationService],
+  providers: [
+    ListNotificationsUseCase,
+    MarkNotificationReadUseCase,
+    PostgresNotificationAdapter,
+    { provide: NOTIFICATION_PORT, useExisting: PostgresNotificationAdapter },
+  ],
 })
 export class NotificationModule { }

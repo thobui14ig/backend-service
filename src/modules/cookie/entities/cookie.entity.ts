@@ -1,12 +1,8 @@
 import { UserEntity } from 'src/modules/user/entities/user.entity';
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { CookieStatus } from '../domain/cookie-status.enum';
 
-export enum CookieStatus {
-    ACTIVE = 'active',
-    INACTIVE = 'inactive',
-    LIMIT = 'limit',
-    DIE = 'die',
-}
+export { CookieStatus } from '../domain/cookie-status.enum';
 
 @Entity('cookie')
 export class CookieEntity {

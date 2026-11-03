@@ -1,16 +1,34 @@
-import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LinkModule } from '../links/links.module';
 import { UserModule } from '../user/user.module';
 import { UserTiktokEntity } from './entities/page.entity';
-import { UserTiktokController } from './user-tiktok.controller';
-import { UserTiktokService } from './user-tiktok.service';
+import { UserTiktokController } from './presentation/http/user-tiktok.controller';
+import { USER_TIKTOK_PORT } from './application/user-tiktok.port';
+import {
+  CreateUserTiktokUseCase,
+  DeleteUserTiktokUseCase,
+  GetUserTiktokUseCase,
+  ListPublicUserTiktokUseCase,
+  ListUserTiktokUseCase,
+  UpdateUserTiktokUseCase,
+} from './application/use-cases/manage-user-tiktok.use-cases';
+import { TypeOrmUserTiktokAdapter } from './infrastructure/typeorm-user-tiktok.adapter';
+import { CheckVipInterceptor } from './interceptors/check-vip';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([UserTiktokEntity]), UserModule, HttpModule, LinkModule],
-  exports: [UserTiktokService],
+  imports: [TypeOrmModule.forFeature([UserTiktokEntity]), UserModule, LinkModule],
   controllers: [UserTiktokController],
-  providers: [UserTiktokService],
+  providers: [
+    CheckVipInterceptor,
+    CreateUserTiktokUseCase,
+    DeleteUserTiktokUseCase,
+    GetUserTiktokUseCase,
+    ListPublicUserTiktokUseCase,
+    ListUserTiktokUseCase,
+    UpdateUserTiktokUseCase,
+    TypeOrmUserTiktokAdapter,
+    { provide: USER_TIKTOK_PORT, useExisting: TypeOrmUserTiktokAdapter },
+  ],
 })
 export class UserTiktokModule { }

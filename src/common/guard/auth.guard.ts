@@ -8,11 +8,11 @@ import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { IS_PUBLIC_KEY } from 'src/common/guard/guard';
 
-import { AuthService } from 'src/modules/auth/auth.service';
+import { RefreshSessionUseCase } from 'src/modules/auth/application/use-cases/refresh-session.use-case';
 import { RedisService } from 'src/modules/redis/redis.service';
 import { jwtConstants } from '../../modules/auth/auth.module';
 import { getSidFromRequest } from '../utils/auth';
-import { UserService } from 'src/modules/user/user.service';
+import { UpdateUserLastActiveUseCase } from 'src/modules/user/application/use-cases/manage-users.use-cases';
 import { UserEntity } from 'src/modules/user/entities/user.entity';
 
 @Injectable()
@@ -21,8 +21,8 @@ export class AuthGuard implements CanActivate {
     private jwtService: JwtService, 
     private reflector: Reflector, 
     private redisService: RedisService,
-    private authService: AuthService,
-    private userService: UserService
+    private refreshSession: RefreshSessionUseCase,
+    private updateUserLastActive: UpdateUserLastActiveUseCase
   ) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -61,7 +61,7 @@ export class AuthGuard implements CanActivate {
       });
       payload = verifiedPayload;
     } catch (err) {
-      payload = await this.authService.refreshToken(sid);
+      payload = await this.refreshSession.execute(sid);
     }
 
     if (typeof payload.id !== 'number' || !Number.isInteger(payload.id) || payload.level == null) {
@@ -69,7 +69,7 @@ export class AuthGuard implements CanActivate {
     }
 
     request['user'] = payload;
-    await this.userService.updateLastActiveAt(payload.id);
+    await this.updateUserLastActive.execute(payload.id);
     return true;
   }
 }

@@ -1,9 +1,9 @@
 import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
-import { AuthService } from 'src/modules/auth/auth.service';
+import { RefreshSessionUseCase } from 'src/modules/auth/application/use-cases/refresh-session.use-case';
 import { LEVEL } from 'src/modules/user/entities/user.entity';
-import { UserService } from 'src/modules/user/user.service';
+import { UpdateUserLastActiveUseCase } from 'src/modules/user/application/use-cases/manage-users.use-cases';
 import { RedisService } from 'src/modules/redis/redis.service';
 import { AuthGuard } from './auth.guard';
 
@@ -24,8 +24,8 @@ describe('AuthGuard', () => {
       { verifyAsync } as unknown as JwtService,
       { getAllAndOverride } as unknown as Reflector,
       { get } as unknown as RedisService,
-      { refreshToken } as unknown as AuthService,
-      { updateLastActiveAt } as unknown as UserService,
+      { execute: refreshToken } as unknown as RefreshSessionUseCase,
+      { execute: updateLastActiveAt } as unknown as UpdateUserLastActiveUseCase,
     );
   });
 

@@ -1,37 +1,49 @@
 import { Body, Controller, Get, Post, Req } from "@nestjs/common";
 import { Request } from "express";
 import { getUser } from "src/common/utils/user";
-import { OrderService } from "./order.service";
 import { Role, Roles } from "src/common/decorators/roles.decorator";
 import { BidvConfirm, BuyVipDto, ConfirmDto, CreateOrderDto } from "./order.controller.i";
 import { Public } from "src/common/guard/guard";
+import {
+  BuyVipUseCase,
+  ConfirmBidvUseCase,
+  ConfirmOrderUseCase,
+  CreateOrderUseCase,
+  GetOrdersUseCase,
+} from './application/use-cases/order.use-cases';
 
 @Controller('orders')
 export class OrderController {
-  constructor(private readonly orderService: OrderService) { }
+  constructor(
+    private readonly createOrder: CreateOrderUseCase,
+    private readonly getOrders: GetOrdersUseCase,
+    private readonly confirmOrder: ConfirmOrderUseCase,
+    private readonly buyVip: BuyVipUseCase,
+    private readonly confirmBidv: ConfirmBidvUseCase,
+  ) { }
 
   @Post()
   create(@Req() req: Request, @Body() body: CreateOrderDto) {
     const user = getUser(req);
-    return this.orderService.create(user.id, body);
+    return this.createOrder.execute(user.id, body);
   }
 
   @Get()
   findAll(@Req() req: Request) {
     const user = getUser(req);
-    return this.orderService.findAll(user.id, user.level);
+    return this.getOrders.execute(user.id, user.level);
   }
 
   @Post("/confirm")
   @Roles(Role.ADMIN)
   confirm(@Body() body: ConfirmDto) {
-    return this.orderService.confirm(body.orderId);
+    return this.confirmOrder.execute(body.orderId);
   }
 
   @Post("/buy-vip")
   orderVip(@Req() req: Request, @Body() body: BuyVipDto) {
     const user = getUser(req);
-    return this.orderService.buyVip(body, user.id)
+    return this.buyVip.execute(body, user.id)
   }
 
   @Post("/bidv-confirm")
@@ -45,6 +57,6 @@ export class OrderController {
         : body.amount
     }
 
-    return this.orderService.bidvConfirm(input)
+    return this.confirmBidv.execute(input)
   }
 }
