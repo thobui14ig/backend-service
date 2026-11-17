@@ -11,6 +11,7 @@ export enum VpsType {
   User = "user",
   Cronjob = "cronjob",
   ProcessPhone = "process-phone",
+  UserPrivate = "user_private",
 }
 
 @Entity("vps")
