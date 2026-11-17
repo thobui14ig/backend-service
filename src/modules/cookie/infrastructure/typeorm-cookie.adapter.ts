@@ -1,15 +1,12 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import {
-  CookiePort,
-  CookieRecord,
-} from '../application/cookie.port';
+import { Injectable } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { CookiePort, CookieRecord } from "../application/cookie.port";
 import {
   CreateCookieInput,
   UpdateCookieInput,
-} from '../application/cookie.types';
-import { CookieEntity, CookieStatus } from '../entities/cookie.entity';
+} from "../application/cookie.types";
+import { CookieEntity, CookieStatus } from "../entities/cookie.entity";
 
 @Injectable()
 export class TypeOrmCookieAdapter implements CookiePort {
@@ -32,21 +29,22 @@ export class TypeOrmCookieAdapter implements CookiePort {
   findAllForUser(userId: number): Promise<CookieRecord[]> {
     return this.repository.find({
       where: { createdBy: userId },
-      order: { id: 'DESC' },
+      order: { id: "DESC" },
     }) as Promise<CookieRecord[]>;
   }
 
   findAll(): Promise<CookieRecord[]> {
     return this.repository
-      .createQueryBuilder('c')
-      .leftJoin('c.user', 'user')
-      .leftJoin('c.page', 'page')
-      .orderBy('c.id', 'DESC')
+      .createQueryBuilder("c")
+      .leftJoin("c.user", "user")
+      .orderBy("c.id", "DESC")
       .getMany() as Promise<CookieRecord[]>;
   }
 
   findOne(id: number): Promise<CookieRecord | null> {
-    return this.repository.findOne({ where: { id } }) as Promise<CookieRecord | null>;
+    return this.repository.findOne({
+      where: { id },
+    }) as Promise<CookieRecord | null>;
   }
 
   update(id: number, input: UpdateCookieInput): Promise<CookieRecord> {

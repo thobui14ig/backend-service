@@ -1,11 +1,15 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
-import { LinkQueryPort } from '../application/link-query.port';
-import { LinkListQuery, LinkListResult, LinkOrderRecord } from '../application/link-query.types';
-import { LinkEntity } from '../entities/links.entity';
-import { LEVEL } from '../../user/entities/user.entity';
-import { GetUserInfoUseCase } from '../../user/application/use-cases/manage-users.use-cases';
+import { Injectable } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { DataSource, Repository } from "typeorm";
+import { LinkQueryPort } from "../application/link-query.port";
+import {
+  LinkListQuery,
+  LinkListResult,
+  LinkOrderRecord,
+} from "../application/link-query.types";
+import { LinkEntity } from "../entities/links.entity";
+import { LEVEL } from "../../user/entities/user.entity";
+import { GetUserInfoUseCase } from "../../user/application/use-cases/manage-users.use-cases";
 
 @Injectable()
 export class TypeOrmLinkQueryAdapter implements LinkQueryPort {
@@ -77,26 +81,28 @@ export class TypeOrmLinkQueryAdapter implements LinkQueryPort {
       userId: filterUserId,
       tiktokId,
     } = filters;
-    const keyword = filters.keyword?.length > 0
-      ? filters.keyword.trim()
-      : null;
+    const keyword = filters.keyword?.length > 0 ? filters.keyword.trim() : null;
     const queryParams: (string | number)[] = [];
-    const queryConditions = ['l.is_deleted = false', 'l.is_link_group = false'];
+    const queryConditions = ["l.is_deleted = false", "l.is_link_group = false"];
     const addCondition = (condition: string, value: string | number) => {
       queryParams.push(value);
-      queryConditions.push(condition.replace('?', `$${queryParams.length}`));
+      queryConditions.push(condition.replace("?", `$${queryParams.length}`));
     };
 
-    if (type) addCondition('l.type = ?', type);
-    if (userLevel === LEVEL.USER || userLevel === LEVEL.SUB_USER) {
-      addCondition('l.user_id = ?', userId);
+    if (type) addCondition("l.type = ?", type);
+    if (
+      userLevel === LEVEL.USER ||
+      userLevel === LEVEL.USER_PRIVATE ||
+      userLevel === LEVEL.SUB_USER
+    ) {
+      addCondition("l.user_id = ?", userId);
     }
-    if (groupId) addCondition('l.group_id = ?', groupId);
-    if (groupAutoId) addCondition('l.group_auto_id = ?', groupAutoId);
-    if (pageId) addCondition('l.page_id = ?', pageId);
-    if (filterUserId) addCondition('l.user_id = ?', filterUserId);
-    if (tiktokId) addCondition('l.tiktok_id = ?', tiktokId);
-    if (platform) addCondition('l.platform = ?', platform);
+    if (groupId) addCondition("l.group_id = ?", groupId);
+    if (groupAutoId) addCondition("l.group_auto_id = ?", groupAutoId);
+    if (pageId) addCondition("l.page_id = ?", pageId);
+    if (filterUserId) addCondition("l.user_id = ?", filterUserId);
+    if (tiktokId) addCondition("l.tiktok_id = ?", tiktokId);
+    if (platform) addCondition("l.platform = ?", platform);
 
     if (keyword) {
       queryParams.push(keyword);
@@ -110,7 +116,7 @@ export class TypeOrmLinkQueryAdapter implements LinkQueryPort {
       )`);
     }
 
-    const baseWhere = queryConditions.join('\n        AND ');
+    const baseWhere = queryConditions.join("\n        AND ");
     const limitParam = `$${queryParams.length + 1}`;
     const offsetParam = `$${queryParams.length + 2}`;
     const startDateParam = `$${queryParams.length + 3}`;
